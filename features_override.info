@@ -1,0 +1,8 @@
+; $Id$
+name = Features override
+description = "Create and export overides to features components, allowing one feature to extend another."
+core = 6.x
+package = Features
+dependencies[] = ctools
+dependencies[] = features
+
