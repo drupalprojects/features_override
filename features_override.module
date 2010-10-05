@@ -150,13 +150,17 @@ function features_override_detect_overrides($module) {
       if (in_array($component, features_override_supported_components()) && $state != FEATURES_DEFAULT) {
         $normal = features_get_normal($component, $module->name);
         $default = features_get_default($component, $module->name);
+        // Cache keys because _features_sanitize() can reset them.
+        $keys = array_keys($normal);
         _features_sanitize($normal);
         _features_sanitize($default);
         $component_overrides = array();
-        foreach ($normal as $name => $properties) {
+        foreach ($normal as $key => $properties) {
+          $name = is_numeric($key) && isset($keys[$key]) ? $keys[$key] : $key;
+
           $component_overrides[$name] = array('additions' => array(), 'deletions' => array());
-          _features_override_set_additions($default[$name], $properties, &$component_overrides[$name]['additions']);
-          _features_override_set_deletions($default[$name], $properties, &$component_overrides[$name]['deletions']);
+          _features_override_set_additions($default[$key], $properties, $component_overrides[$name]['additions']);
+          _features_override_set_deletions($default[$key], $properties, $component_overrides[$name]['deletions']);
           if (empty($component_overrides[$name]['additions']) && empty($component_overrides[$name]['deletions'])) {
             unset($component_overrides[$name]);
           }
