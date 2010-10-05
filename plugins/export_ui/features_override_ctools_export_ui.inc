@@ -21,8 +21,8 @@ function features_override_ctools_export_ui_form(&$form, &$form_state) {
   $item = $form_state['item'];
 
   if ($overrides = features_override_get_overrides()) {
+    $options[0] = t('Select an overridden item');
     foreach ($overrides as $component => $items) {
-      $options[0] = t('Select an overridden item');
       if (!isset($options[$component])) {
         $options[$component] = array();
       }
