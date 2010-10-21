@@ -150,22 +150,22 @@ function features_override_detect_overrides($module) {
       if (in_array($component, features_override_supported_components()) && $state != FEATURES_DEFAULT) {
         $normal = features_get_normal($component, $module->name);
         $default = features_get_default($component, $module->name);
-        // Cache keys because _features_sanitize() can reset them.
-        $keys = array_keys($normal);
-        _features_sanitize($normal);
-        _features_sanitize($default);
+        // Can't use _features_sanitize as that resets some keys.
+        _features_override_sanitize($normal);
+        _features_override_sanitize($default);
         $component_overrides = array();
-        foreach ($normal as $key => $properties) {
-          $name = is_numeric($key) && isset($keys[$key]) ? $keys[$key] : $key;
-
+        foreach ($normal as $name => $properties) {
           $component_overrides[$name] = array('additions' => array(), 'deletions' => array());
-          _features_override_set_additions($default[$key], $properties, $component_overrides[$name]['additions']);
-          _features_override_set_deletions($default[$key], $properties, $component_overrides[$name]['deletions']);
+          // TODO: handle the case of added components.
+          if (isset($default[$name])) {
+            _features_override_set_additions($default[$name], $properties, $component_overrides[$name]['additions']);
+            _features_override_set_deletions($default[$name], $properties, $component_overrides[$name]['deletions']);
+          }
+
           if (empty($component_overrides[$name]['additions']) && empty($component_overrides[$name]['deletions'])) {
             unset($component_overrides[$name]);
           }
         }
-
         if (!empty($component_overrides)) {
           $overrides[$component] = $component_overrides;
         }
@@ -176,6 +176,26 @@ function features_override_detect_overrides($module) {
   return $cache[$module->name];
 }
 
+/**
+ * "Sanitizes" an array recursively, performing:
+ * - Sort an array by its keys (assoc) or values (non-assoc).
+ */
+function _features_override_sanitize(&$array) {
+  if (is_array($array)) {
+    $is_assoc = (array_keys($array) !== range(0, count($array) - 1));
+    if ($is_assoc) {
+      ksort($array);
+    }
+    else {
+      sort($array);
+    }
+    foreach ($array as $k => $v) {
+      if (is_array($v)) {
+        _features_override_sanitize($array[$k]);
+      }
+    }
+  }
+}
 /**
  * Override standard ctools export to add dependency data.
  */
@@ -258,6 +278,12 @@ function features_override_export($alters) {
 function _features_override_set_additions($default, $normal, &$additions, $keys = array()) {
   $object = is_object($normal);
   foreach ($normal as $key => $value) {
+    // Don't register extra fields as an override.
+    // The 'content_has_extra_fields' flag is added to indicate that there are added fields.
+    // However, these should simply be added to a feature as fields; they are not an override.
+    if ($key == 'content_has_extra_fields') {
+      return;
+    }
     if ($object) {
       if (!isset($default->$key) || ($default->$key != $value && !(is_array($value) || is_object($value)))) {
         $additions[] = array(
