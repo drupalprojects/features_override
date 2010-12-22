@@ -97,17 +97,37 @@ function features_override_load_all($reset = FALSE) {
  * @return
  *   Array of component types.
  */
-function features_override_supported_components($hooks = FALSE) {
-  $components = array();
-  // Exclude values can be component types or modules that supply them.
-  $exclude = array('views', 'panels', 'page_manager', 'features_override');
-  foreach (features_get_components() as $component => $info) {
-    if (isset($info['default_hook']) && (!isset($info['overridable']) || !empty($info['overridable'])) && !in_array($component, $exclude) && (!isset($component['module']) || !in_array($component['module'], $exclude))) {
-      $components[$component] = $hooks ? $info['default_hook'] : $component;
+function features_override_supported_components($hooks = FALSE, $reset = FALSE) {
+
+  if ($reset) {
+    cache_clear_all('features_override:components', 'cache');
+  }
+  else {
+    $components = cache_get('features_override:components');
+    if (isset($components) && is_array($compontents)) {
+      return $hooks ? $components : drupal_map_assoc(array_keys($components));
     }
   }
-  drupal_alter('features_override_supported_components', $components, $hooks);
-  return $components;
+  $components = array();
+  foreach (features_get_components() as $component => $info) {
+    // Don't offer an override for overriding!
+    // Support an 'overridable' property.
+    if (isset($info['default_hook']) && (!isset($info['overridable']) || !empty($info['overridable'])) && (!isset($component['module']) || !$component['module'] != 'features_override')) {
+      $components[$component] = $info['default_hook'];
+    }
+  }
+  // Allow modules to alter the compontents before caching.
+  drupal_alter('features_override_supported_components', $components);
+  cache_set('features_override:components', $components);
+
+  return $hooks ? $components : drupal_map_assoc(array_keys($components));
+}
+
+/**
+ * Clear features_override cache on admin/build/modules form.
+ */
+function features_override_form_system_modules_alter(&$form, $form_state) {
+  features_override_supported_components(FALSE, TRUE);
 }
 
 /**
@@ -233,6 +253,7 @@ function features_override_features_export_options() {
   }
   return $options;
 }
+
 
 /**
  * Export a set of alters.
