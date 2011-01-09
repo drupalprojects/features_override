@@ -12,6 +12,11 @@
 define('FEATURES_OVERRIDE_REQUIRED_CTOOLS_API', '1.7');
 
 /**
+ * Key to use when marking properties for recursion.
+ */
+define('FEATURES_OVERRIDE_RECURSION_MARKER', 'features_override_recursion_marker');
+
+/**
  * Implementation of hook_init().
  */
 function features_override_init() {
@@ -160,7 +165,6 @@ function features_override_detect_overrides($module) {
     // Rebuild feature from .info file description and prepare an export from current DB state.
     $export = features_populate($module->info['features'], $module->info['dependencies'], $module->name);
     $export = features_export_prepare($export, $module->name);
-
     $overrides = array();
 
     // Collect differences at a per-component level
@@ -179,7 +183,9 @@ function features_override_detect_overrides($module) {
           // TODO: handle the case of added components.
           if (isset($default[$name])) {
             _features_override_set_additions($default[$name], $properties, $component_overrides[$name]['additions']);
+            _features_override_leave_hive($default[$name]);
             _features_override_set_deletions($default[$name], $properties, $component_overrides[$name]['deletions']);
+            _features_override_leave_hive($default[$name]);
           }
 
           if (empty($component_overrides[$name]['additions']) && empty($component_overrides[$name]['deletions'])) {
@@ -194,8 +200,7 @@ function features_override_detect_overrides($module) {
     $cache[$module->name] = $overrides;
   }
   return $cache[$module->name];
-}
-
+}
 /**
  * "Sanitizes" an array recursively, performing:
  * - Sort an array by its keys (assoc) or values (non-assoc).
@@ -238,7 +243,7 @@ function features_override_features_export($data, &$export, $module_name = "") {
 }
 
 /**
- * Override standard ctools export options to add exclude a current feature's overrides.
+ * Override standard ctools export options to exclude a current feature's overrides.
  */
 function features_override_features_export_options() {
   $options = ctools_component_features_export_options('features_override');
@@ -253,7 +258,6 @@ function features_override_features_export_options() {
   }
   return $options;
 }
-
 
 /**
  * Export a set of alters.
@@ -293,16 +297,82 @@ function features_override_export($alters) {
   return $code;
 }
 
+
+/**
+ * Add a variable to the hive of arrays and objects which 
+ * are tracked for whether they have recursive entries
+ *
+ * @param &$bee
+ *   Array or object.
+ * @return
+ *   Array all the bees.
+ */
+function _features_override_hive(&$bee = NULL) {
+  static $bees = array();
+
+  // New bee ?
+  if (!is_null($bee)) {
+    // Stain it.
+    $recursion_marker = FEATURES_OVERRIDE_RECURSION_MARKER;
+    (is_object($bee))
+      ? @($bee->$recursion_marker++)
+      : @($bee[$recursion_marker]++);
+
+    $bees[0][] =& $bee;
+  }
+
+  // Return all bees.
+  return $bees[0];
+}
+
+/**
+ * Remove markers from previously marked elements.
+ */
+function _features_override_leave_hive() {
+  $hive = _features_override_hive();
+  foreach($hive as $i => $bee){
+    $recursion_marker = FEATURES_OVERRIDE_RECURSION_MARKER;
+    if (is_object($bee)) {
+      unset($hive[$i]->$recursion_marker);
+    }
+    else {
+      unset($hive[$i][$recursion_marker]);
+    }
+  }
+}
+
+/**
+ * Return a marker of recursion.
+ */
+function _features_override_recursion_marker(&$normal, $object) {
+  _features_override_hive($normal);
+  // Test for references in order to
+  // prevent endless recursion loops.
+  $recursion_marker = FEATURES_OVERRIDE_RECURSION_MARKER;
+  $r = ($object)
+	  ? @$normal->$recursion_marker
+	  : @$normal[$recursion_marker] ;
+  $r = (integer) $r;
+  return $r;
+}
+
 /**
  * Helper function to set the additions and alters between default and normal components.
  */
 function _features_override_set_additions($default, $normal, &$additions, $keys = array()) {
   $object = is_object($normal);
+
+  // Recursion detected.
+  if (_features_override_recursion_marker($default, $object) > 1) {
+    return;
+  }
+
   foreach ($normal as $key => $value) {
     // Don't register extra fields as an override.
     // The 'content_has_extra_fields' flag is added to indicate that there are added fields.
     // However, these should simply be added to a feature as fields; they are not an override.
-    if ($key == 'content_has_extra_fields') {
+    // Ignore the marker used to track detect recursion.
+    if (in_array($key, array('content_has_extra_fields', FEATURES_OVERRIDE_RECURSION_MARKER))) {
       return;
     }
     if ($object) {
@@ -312,7 +382,7 @@ function _features_override_set_additions($default, $normal, &$additions, $keys 
           'value' => $value,
         );
       }
-      elseif ($default->$key != $value) {
+      elseif (isset($default->$key) && $default->$key != $value) {
         _features_override_set_additions($default->$key, $value, $additions, array_merge($keys, array(array('type' => 'object', 'key' => $key))));
       }
     }
@@ -323,7 +393,7 @@ function _features_override_set_additions($default, $normal, &$additions, $keys 
           'value' => $value,
         );
       }
-      elseif ($default[$key] != $value) {
+      elseif (isset($default[$key]) && $default[$key] != $value) {
         _features_override_set_additions($default[$key], $value, $additions, array_merge($keys, array(array('type' => 'array', 'key' => $key))));
       }
     }
@@ -335,7 +405,17 @@ function _features_override_set_additions($default, $normal, &$additions, $keys 
  */
 function _features_override_set_deletions($default, $normal, &$deletions, $keys = array()) {
   $object = is_object($default);
+
+  // Recursion detected.
+  if (_features_override_recursion_marker($default, $object) > 1) {
+    return;
+  }
+
   foreach ($default as $key => $value) {
+    // Ignore the marker used to track detect recursion.
+    if ($key == FEATURES_OVERRIDE_RECURSION_MARKER) {
+      continue;
+    }
     if ($object) {
       if (!isset($normal->$key)) {
         $deletions[] = array(
