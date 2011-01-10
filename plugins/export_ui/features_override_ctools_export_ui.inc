@@ -47,8 +47,8 @@ function features_override_ctools_export_ui_form(&$form, &$form_state) {
   else {
     $form = array(
       array(
-        '#type' => 'markup',
-        '#value' => '<p>' . t('No overridden components found.') . '</p>',
+        '#type' => 'item',
+        '#markup' => '<p>' . t('No overridden components found.') . '</p>',
       ),
     );
   }
