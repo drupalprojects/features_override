@@ -2,20 +2,6 @@
 // $Id$
 
 /**
- * Implementation of hook_install().
- */
-function features_override_install() {
-  drupal_install_schema('features_override');
-}
-
-/**
- * Implementation of hook_uninstall().
- */
-function features_override_uninstall() {
-  drupal_uninstall_schema('features_override');
-}
-
-/**
  * Implementation of hook_schema()
  */
 function features_override_schema() {

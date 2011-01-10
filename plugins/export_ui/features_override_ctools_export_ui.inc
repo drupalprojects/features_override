@@ -7,7 +7,7 @@ $plugin = array(
   'menu' => array(
     'menu title' => 'Override',
     'menu item' => 'features-override',
-    'menu prefix' => 'admin/build/features',
+    'menu prefix' => 'admin/structure/features',
     'menu description' => 'Administer overrides of feature components.',
   ),
   'title' => t('Features override'),
