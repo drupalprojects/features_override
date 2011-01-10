@@ -109,7 +109,7 @@ function features_override_supported_components($hooks = FALSE, $reset = FALSE) 
   }
   else {
     $components = cache_get('features_override:components');
-    if (isset($components) && is_array($compontents)) {
+    if (isset($components) && is_array($components)) {
       return $hooks ? $components : drupal_map_assoc(array_keys($components));
     }
   }
