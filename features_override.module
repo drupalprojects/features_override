@@ -178,29 +178,32 @@ function features_override_detect_overrides($module) {
         _features_override_sanitize($normal);
         _features_override_sanitize($default);
         $component_overrides = array();
-        foreach ($normal as $name => $properties) {
-          $component_overrides[$name] = array('additions' => array(), 'deletions' => array());
-          // TODO: handle the case of added components.
-          if (isset($default[$name])) {
-            _features_override_set_additions($default[$name], $properties, $component_overrides[$name]['additions']);
-            _features_override_leave_hive($default[$name]);
-            _features_override_set_deletions($default[$name], $properties, $component_overrides[$name]['deletions']);
-            _features_override_leave_hive($default[$name]);
-          }
+        if ($normal && is_array($normal) || is_object($normal)) {
+          foreach ($normal as $name => $properties) {
+            $component_overrides[$name] = array('additions' => array(), 'deletions' => array());
+            // TODO: handle the case of added components.
+            if (isset($default[$name])) {
+              _features_override_set_additions($default[$name], $properties, $component_overrides[$name]['additions']);
+              _features_override_leave_hive($default[$name]);
+              _features_override_set_deletions($default[$name], $properties, $component_overrides[$name]['deletions']);
+              _features_override_leave_hive($default[$name]);
+            }
 
-          if (empty($component_overrides[$name]['additions']) && empty($component_overrides[$name]['deletions'])) {
-            unset($component_overrides[$name]);
+            if (empty($component_overrides[$name]['additions']) && empty($component_overrides[$name]['deletions'])) {
+              unset($component_overrides[$name]);
+            }
           }
-        }
-        if (!empty($component_overrides)) {
-          $overrides[$component] = $component_overrides;
+          if (!empty($component_overrides)) {
+            $overrides[$component] = $component_overrides;
+          }
         }
       }
     }
     $cache[$module->name] = $overrides;
   }
   return $cache[$module->name];
-}
+}
+
 /**
  * "Sanitizes" an array recursively, performing:
  * - Sort an array by its keys (assoc) or values (non-assoc).

@@ -7,7 +7,7 @@
 function features_override_features_default_alter(&$items, $component) {
   $overrides = features_override_load_all();
   foreach ($overrides as $override) {
-    if ($override->component_type == $component && !empty($override->value)) {
+    if (isset($items[$override->component_id]) && $override->component_type == $component && !empty($override->value)) {
       if (!empty($override->value['additions'])) {
         foreach ($override->value['additions'] as $addition) {
           $item =& $items[$override->component_id];
@@ -34,7 +34,7 @@ function features_override_features_default_alter(&$items, $component) {
               $item =& $item[$key['key']];
             }
           }
-          $copy = is_object($item) ? drupal_clone($item) : $item;
+          $copy = is_object($item) ? clone($item) : $item;
           if ($last_key['type'] == 'object') {
             unset($copy->{$last_key['key']});
           }
