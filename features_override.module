@@ -200,7 +200,8 @@ function features_override_detect_overrides($module) {
     $cache[$module->name] = $overrides;
   }
   return $cache[$module->name];
-}
+}
+
 /**
  * "Sanitizes" an array recursively, performing:
  * - Sort an array by its keys (assoc) or values (non-assoc).
