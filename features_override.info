@@ -1,8 +1,15 @@
 ; $Id$
 name = Features override
-description = "Create and export overides to features components, allowing one feature to extend another."
+description = "Create, export, and use overides to features components, allowing one feature to extend another."
 core = 7.x
 package = Features
 dependencies[] = ctools
 dependencies[] = features
-
+files[] = modules/captcha.features_override.inc
+files[] = modules/context.features_override.inc
+files[] = modules/features.features_override.inc
+files[] = modules/page_manager.features_override.inc
+files[] = modules/panels.features_override.inc
+files[] = modules/panels_mini.features_override.inc
+files[] = modules/strongarm.features_override.inc
+files[] = modules/views.features_override.inc
