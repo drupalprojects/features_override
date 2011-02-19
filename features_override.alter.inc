@@ -7,41 +7,15 @@
 function features_override_features_default_alter(&$items, $component) {
   $overrides = features_override_load_all();
   foreach ($overrides as $override) {
-    if ($override->component_type == $component && !empty($override->value)) {
-      if (!empty($override->value['additions'])) {
+    if (isset($items[$override->component_id]) && $override->component_type == $component && !empty($override->value)) {
+      if (isset ($override->value['additions']) && !empty($override->value['additions'])) {
         foreach ($override->value['additions'] as $addition) {
-          $item =& $items[$override->component_id];
-          foreach ($addition['keys'] as $key) {
-            if ($key['type'] == 'object') {
-              $item =& $item->{$key['key']};
-            }
-            else {
-              $item =& $item[$key['key']];
-            }
-          }
-          $item = $addition['value'];
+          _features_override_set_item($items[$override->component_id], 'add', $addition['keys'], $addition['value']);
         }
       }
-      if (!empty($override->value['deletions'])) {
+      if (isset ($override->value['deletions']) && !empty($override->value['deletions'])) {
         foreach ($override->value['deletions'] as $deletion) {
-          $item =& $items[$override->component_id];
-          $last_key = array_pop($deletion['keys']);
-          foreach ($deletion['keys'] as $key) {
-            if ($key['type'] == 'object') {
-              $item =& $item->{$key['key']};
-            }
-            else {
-              $item =& $item[$key['key']];
-            }
-          }
-          $copy = is_object($item) ? drupal_clone($item) : $item;
-          if ($last_key['type'] == 'object') {
-            unset($copy->{$last_key['key']});
-          }
-          else {
-            unset($copy[$last_key['key']]);
-          }
-          $item = $copy;
+          _features_override_set_item($items[$override->component_id], 'delete', $deletion['keys']);
         }
       }
     }
@@ -49,19 +23,39 @@ function features_override_features_default_alter(&$items, $component) {
 }
 
 /**
- * Adapted from features.ctools.inc; this is a wild hack, but effective.
- *
- * Dynamically declare alter functions for all supported components.
- *
- * Because this function indirectly calls features_include() on every page, it has
- * significant performance implications.
- *
- * @todo
- *   Either introduce a general alter hook for all features components or
- *   determine how to limit these alter calls to pages where they are needed.
+ * Set a single addition or deletion for a component.
  */
-foreach (features_override_supported_components(TRUE) as $component => $default_hook) {
-  $code = 'function features_override_'. $default_hook .'_alter(&$items) { features_override_features_default_alter($items, "' . $component .'"); }';
-  eval($code);
+function _features_override_set_item(&$item, $action, $keys, $value = NULL) {
+  $key = array_shift($keys);
+  if ($key['type'] == 'object') {
+    if (count($keys) && isset($item->{$key['key']})) {
+      _features_override_set_item($item->{$key['key']}, $action, $keys, $value);
+    }
+    else {
+      switch($action) {
+        case 'add':
+          $item->{$key['key']} = $value;
+          break;
+        case 'delete':
+          unset($item->{$key['key']});
+          break;
+      }
+    }
+  }
+  else {
+    if (count($keys) && isset($item[$key['key']])) {
+      _features_override_set_item($item[$key['key']], $action, $keys, $value);
+    }
+    else {
+      switch($action) {
+        case 'add':
+          $item[$key['key']] = $value;
+          break;
+        case 'delete':
+          unset($item[$key['key']]);
+          break;
+      }
+    }
+  }
 }
 

@@ -21,6 +21,28 @@ define('FEATURES_OVERRIDE_RECURSION_MARKER', 'features_override_recursion_marker
  */
 function features_override_init() {
   module_load_include('inc', 'features_override', 'features_override.alter');
+  foreach (module_list() as $module) {
+    // Safe to call as it tests for the file before loading.
+    module_load_include('inc', 'features_override', "modules/$module.features_override");
+  }
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function features_override_menu() {
+  $items = array();
+  $items['admin/build/features/features-override/extend'] = array(
+    'type' => MENU_LOCAL_TASK,
+    'title' => 'Extend',
+    'description' => 'Add support for additional feature components',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('features_override_extend'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'features_override.extend.inc',
+    'weight' => 10,
+  );
+  return $items;
 }
 
 /**
@@ -116,8 +138,7 @@ function features_override_supported_components($hooks = FALSE, $reset = FALSE) 
   $components = array();
   foreach (features_get_components() as $component => $info) {
     // Don't offer an override for overriding!
-    // Support an 'overridable' property.
-    if (isset($info['default_hook']) && (!isset($info['overridable']) || !empty($info['overridable'])) && (!isset($component['module']) || !$component['module'] != 'features_override')) {
+    if (isset($info['default_hook']) && module_hook('features_override', $info['default_hook'] . '_alter')) {
       $components[$component] = $info['default_hook'];
     }
   }
