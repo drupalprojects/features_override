@@ -11,7 +11,7 @@ function features_override_extend() {
     if (isset($info['default_hook']) && 
       (!isset($info['module']) || $info['module'] != 'features_override') && 
       !module_hook('features_override', $info['default_hook'] . '_alter')) {
-      $components[] = $component;
+      $components[] = isset($info['name']) ? $info['name']  . ' (' . $component . ')' : $component;
     }
   }
 
@@ -24,7 +24,7 @@ function features_override_extend() {
     );
   }
   else {
-    $form['#prefix'] = t('All features compontent are already avilable for overriding.');
+    $form['#prefix'] = t('All features compontent are already available for overriding.');
   }
   return $form;
 }
