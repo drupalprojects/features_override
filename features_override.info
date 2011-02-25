@@ -1,4 +1,3 @@
-; $Id$
 name = Features override
 description = "Create, export, and use overides to features components, allowing one feature to extend another."
 core = 7.x
