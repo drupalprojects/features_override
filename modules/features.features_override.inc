@@ -29,13 +29,6 @@ function features_override_menu_default_items_alter(&$items) {
 }
 
 /**
- * Implementation of hook_node_info_alter().
- */
-function features_override_node_info_alter(&$items) {
-  features_override_features_default_alter($items, "node");
-}
-
-/**
  * Implementation of hook_taxonomy_default_vocabularies_alter().
  */
 function features_override_taxonomy_default_vocabularies_alter(&$items) {
