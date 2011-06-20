@@ -70,3 +70,30 @@ function features_override_user_default_permissions_alter(&$items) {
   features_override_features_default_alter($items, "user_permission");
 }
 
+/**
+ * Implementation of hook_default_search_api_server_alter().
+ */
+function features_override_default_search_api_server_alter(&$items) {
+  features_override_features_default_alter($items, "search_api_server");
+}
+
+/**
+ * Implementation of hook_default_search_api_index_alter().
+ */
+function features_override_default_search_api_index_alter(&$items) {
+  features_override_features_default_alter($items, "search_api_index");
+}
+
+/**
+ * Implementation of hook_default_search_api_facet_alter().
+ */
+function features_override_default_search_api_facet_alter(&$items) {
+  features_override_features_default_alter($items, "search_api_facet");
+}
+
+/**
+ * Implementation of hook_flag_default_flags_alter().
+ */
+function features_override_flag_default_flags_alter(&$items) {
+  features_override_features_default_alter($items, "flag");
+}
