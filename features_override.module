@@ -413,6 +413,7 @@ function _features_override_set_additions($default, $normal, &$additions, $keys 
         $additions[] = array(
           'keys' => array_merge($keys, array(array('type' => 'object', 'key' => $key))),
           'value' => $value,
+          'order' => array_keys((array)$normal),
         );
       }
       elseif (isset($default->$key) && $default->$key !== $value) {
@@ -424,6 +425,7 @@ function _features_override_set_additions($default, $normal, &$additions, $keys 
         $additions[] = array(
           'keys' => array_merge($keys, array(array('type' => 'array', 'key' => $key))),
           'value' => $value,
+          'order' => array_keys($normal),
         );
       }
       elseif (isset($default[$key]) && $default[$key] !== $value) {
