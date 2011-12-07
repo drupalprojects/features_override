@@ -97,3 +97,24 @@ function features_override_default_search_api_facet_alter(&$items) {
 function features_override_flag_default_flags_alter(&$items) {
   features_override_features_default_alter($items, "flag");
 }
+
+/**
+ * Implementation of hook_commerce_product_default_types_alter().
+ */
+function features_override_commerce_product_default_types_alter(&$items) {
+  features_override_features_default_alter($items, "commerce_product_type");
+}
+
+/**
+ * Implementation of hook_default_og_membership_type_alter().
+ */
+function features_override_default_og_membership_type_alter(&$items) {
+  features_override_features_default_alter($items, "og_membership_type");
+}
+
+/**
+ * Implementation of hook_default_profile2_type_alter().
+ */
+function features_override_default_profile2_type_alter(&$items) {
+  features_override_features_default_alter($items, "profile2_type");
+}
