@@ -203,6 +203,16 @@ function features_override_detect_overrides($module) {
             $component_overrides[$name] = array('additions' => array(), 'deletions' => array());
             // TODO: handle the case of added components.
             if (isset($default[$name])) {
+              // Clean up views objects so we don't process information we don't need to.
+              if ($component == 'views') {
+                if (is_object($properties) && method_exists($properties, 'destroy')) {
+                  $properties->destroy();
+                }
+                if (is_object($default[$name]) && method_exists($default[$name], 'destroy')) {
+                  $default[$name]->destroy();
+                }
+              }
+
               _features_override_set_additions($default[$name], $properties, $component_overrides[$name]['additions']);
               _features_override_leave_hive($default[$name]);
               _features_override_set_deletions($default[$name], $properties, $component_overrides[$name]['deletions']);
