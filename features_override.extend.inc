@@ -8,8 +8,8 @@ function features_override_extend() {
   $form = array();
   $compontents = array();
   foreach (features_get_components() as $component => $info) {
-    if (isset($info['default_hook']) && 
-      (!isset($info['module']) || $info['module'] != 'features_override') && 
+    if (isset($info['default_hook']) &&
+      (!isset($info['module']) || $info['module'] != 'features_override') &&
       // No hook_node_info_alter().
       $info['default_hook'] != 'node_info' &&
       !module_hook('features_override', $info['default_hook'] . '_alter')) {
@@ -45,19 +45,19 @@ function features_override_extend_submit() {
 function features_override_generate() {
   $files = array();
   foreach (features_get_components() as $component => $info) {
-    if (isset($info['default_hook']) && 
-      (!isset($info['module']) || $info['module'] != 'features_override') && 
+    if (isset($info['default_hook']) &&
+      (!isset($info['module']) || $info['module'] != 'features_override') &&
       $info['default_hook'] != 'node_info' &&
       !module_hook('features_override', $info['default_hook'] . '_alter')) {
-      // Assign any component that doesn't specify a module to the features 
+      // Assign any component that doesn't specify a module to the features
       // module.
       $module = isset($info['module']) ? $info['module'] : 'features';
       $code = array();
       $code[] = "/**";
-      $code[] = " * Implementation of hook_{$info['default_hook']}_alter().";
+      $code[] = " * Implements hook_{$info['default_hook']}_alter().";
       $code[] = " */";
-      $code[] = 'function features_override_'. $info['default_hook'] .'_alter(&$items) {';
-      $code[] = '  features_override_features_default_alter($items, "' . $component .'");';
+      $code[] = 'function features_override_' . $info['default_hook'] . '_alter(&$items) {';
+      $code[] = '  features_override_features_default_alter($items, "' . $component . '");';
       $code[] = "}";
       $code = implode("\n", $code);
       $files[$module][] = $code;

@@ -16,7 +16,7 @@ define('FEATURES_OVERRIDE_REQUIRED_CTOOLS_API', '1.7');
 define('FEATURES_OVERRIDE_RECURSION_MARKER', 'features_override_recursion_marker');
 
 /**
- * Implementation of hook_init().
+ * Implements hook_init().
  */
 function features_override_init() {
   module_load_include('inc', 'features_override', 'features_override.alter');
@@ -27,7 +27,7 @@ function features_override_init() {
 }
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function features_override_menu() {
   $items = array();
@@ -45,7 +45,7 @@ function features_override_menu() {
 }
 
 /**
- * Implementation of hook_menu_alter().
+ * Implements hook_menu_alter().
  */
 function features_override_menu_alter(&$items) {
   if (isset($items['admin/structure/features/features-override'])) {
@@ -55,7 +55,7 @@ function features_override_menu_alter(&$items) {
 }
 
 /**
- * Implementation of hook_ctools_plugin_api().
+ * Implements hook_ctools_plugin_api().
  */
 function features_override_ctools_plugin_api($module, $api) {
   if ($module == 'features_override' && $api == 'plugins') {
@@ -64,7 +64,7 @@ function features_override_ctools_plugin_api($module, $api) {
 }
 
 /**
- * Implementation of hook_ctools_plugin_directory().
+ * Implements hook_ctools_plugin_directory().
  */
 function features_override_ctools_plugin_directory($module, $type) {
   // Safety: go away if CTools is not at an appropriate version.
@@ -264,7 +264,7 @@ function features_override_features_export($data, &$export, $module_name = "") {
     $export['dependencies'] = array();
   }
 
-  foreach($data as $component) {
+  foreach ($data as $component) {
     // This function will only be called in the context of a features export so we can assume ctools export.inc
     // has been loaded.
     $component = ctools_export_crud_load('features_override', $component);
@@ -284,7 +284,7 @@ function features_override_features_export_options() {
     $map = features_get_component_map();
     foreach ($options as $option) {
       $component = ctools_export_crud_load('features_override', $option);
-       if (isset($map[$component->component_type]) && isset($map[$component->component_type][$component->component_id] ) && in_array($current_feature->name, $map[$component->component_type][$component->component_id])) {
+      if (isset($map[$component->component_type]) && isset($map[$component->component_type][$component->component_id] ) && in_array($current_feature->name, $map[$component->component_type][$component->component_id])) {
         unset($options[$option]);
       }
     }
@@ -332,7 +332,7 @@ function features_override_export($alters) {
 
 
 /**
- * Add a variable to the hive of arrays and objects which 
+ * Add a variable to the hive of arrays and objects which
  * are tracked for whether they have recursive entries
  *
  * @param &$bee
@@ -363,7 +363,7 @@ function _features_override_hive(&$bee = NULL) {
  */
 function _features_override_leave_hive() {
   $hive = _features_override_hive();
-  foreach($hive as $i => $bee){
+  foreach ($hive as $i => $bee) {
     $recursion_marker = FEATURES_OVERRIDE_RECURSION_MARKER;
     if (is_object($bee)) {
       unset($hive[$i]->$recursion_marker);
@@ -383,8 +383,8 @@ function _features_override_recursion_marker(&$normal, $object) {
   // prevent endless recursion loops.
   $recursion_marker = FEATURES_OVERRIDE_RECURSION_MARKER;
   $r = ($object)
-	  ? @$normal->$recursion_marker
-	  : @$normal[$recursion_marker] ;
+    ? @$normal->$recursion_marker
+    : @$normal[$recursion_marker] ;
   $r = (integer) $r;
   return $r;
 }

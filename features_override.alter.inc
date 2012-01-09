@@ -31,11 +31,11 @@ function _features_override_set_item(&$item, $action, $keys, $value = NULL, $ord
       _features_override_set_item($item->{$key['key']}, $action, $keys, $value, $order);
     }
     else {
-      switch($action) {
+      switch ($action) {
         case 'add':
           $item->{$key['key']} = $value;
           if (isset($order) && (array_keys((array)$item) !== range(0, count((array)$item) - 1))) {
-            $compare = create_function('$a,$b', '$order = '. var_export($order, TRUE) .'; $apos = array_search($a, $order); $bpos = array_search($b, $order); if ($apos == $bpos) return 0; return ($apos < $bpos) ? -1 : 1;');
+            $compare = create_function('$a,$b', '$order = ' . var_export($order, TRUE) . '; $apos = array_search($a, $order); $bpos = array_search($b, $order); if ($apos == $bpos) return 0; return ($apos < $bpos) ? -1 : 1;');
             $item = (array)$item;
             uksort($item, $compare);
             $item = (object)$item;
@@ -52,11 +52,11 @@ function _features_override_set_item(&$item, $action, $keys, $value = NULL, $ord
       _features_override_set_item($item[$key['key']], $action, $keys, $value, $order);
     }
     else {
-      switch($action) {
+      switch ($action) {
         case 'add':
           $item[$key['key']] = $value;
           if (isset($order) && (array_keys($item) !== range(0, count($item) - 1))) {
-            $compare = create_function('$a,$b', '$order = '. var_export($order, TRUE) .'; $apos = array_search($a, $order); $bpos = array_search($b, $order); if ($apos == $bpos) return 0; return ($apos < $bpos) ? -1 : 1;');
+            $compare = create_function('$a,$b', '$order = ' . var_export($order, TRUE) . '; $apos = array_search($a, $order); $bpos = array_search($b, $order); if ($apos == $bpos) return 0; return ($apos < $bpos) ? -1 : 1;');
             uksort($item, $compare);
           }
           break;
