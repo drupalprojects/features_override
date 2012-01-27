@@ -29,7 +29,7 @@ function features_override_form($form, $form_state, $feature = NULL) {
       '#prefix' => '<h4>',
       '#suffix' => '</h4>',
     );
-    $override_list['New Overrides'] = features_override_convert( features_override_get_overrides($feature->name));
+    $override_list['New Overrides'] = features_override_convert(features_override_get_overrides($feature->name));
     $override_list['Existing Overrides'] = features_override_get_existing_overrides($feature->name);
     $default_value['New Overrides'] = FALSE;
     $default_value['Existing Overrides'] = TRUE;
@@ -62,7 +62,7 @@ function features_override_form($form, $form_state, $feature = NULL) {
         $code = array();
         $options = array();
         $default_values = array();
-        features_override_export_override( $code, '', $value, NULL);
+        features_override_export_override($code, '', $value, NULL);
         $i = 0;
         foreach ($code as $line) {
           $options[$key . '.' . $i] = $line;
@@ -111,7 +111,7 @@ function features_override_export_submit($form, &$form_state) {
   $code = $form['#code'];
   $module_name = $feature->name;
   $export = $form_state['values'];
-  $version = (isset($feature->info['version'])) ? $feature->info['version'] : '';
+  $version = isset($feature->info['version']) ? $feature->info['version'] : '';
 
   $data = array();
   foreach ($export as $component => $element) {
@@ -166,4 +166,3 @@ function features_override_export_submit($form, &$form_state) {
     exit;
   }
 }
-
