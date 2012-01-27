@@ -1,4 +1,4 @@
-name = Features Override 2
+name = Features Override
 description = Allows exported Features to be overridden
 core = 7.x
 dependencies[] = ctools

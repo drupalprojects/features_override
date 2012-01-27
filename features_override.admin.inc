@@ -8,10 +8,10 @@
 /**
  * Form callback for features overrides form.
  */
-function features_override2_form($form, $form_state, $feature = NULL) {
+function features_override_form($form, $form_state, $feature = NULL) {
   module_load_include('inc', 'features', 'features.export');
   drupal_add_css(drupal_get_path('module', 'features') . '/features.css');
-  drupal_add_css(drupal_get_path('module', 'features_override2') . '/features_override2.css');
+  drupal_add_css(drupal_get_path('module', 'features_override') . '/features_override.css');
 
   $form = array();
   $override_list = array();
@@ -29,8 +29,8 @@ function features_override2_form($form, $form_state, $feature = NULL) {
       '#prefix' => '<h4>',
       '#suffix' => '</h4>',
     );
-    $override_list['New Overrides'] = features_override2_convert( features_override2_get_overrides($feature->name));
-    $override_list['Existing Overrides'] = features_override2_get_existing_overrides($feature->name);
+    $override_list['New Overrides'] = features_override_convert( features_override_get_overrides($feature->name));
+    $override_list['Existing Overrides'] = features_override_get_existing_overrides($feature->name);
     $default_value['New Overrides'] = FALSE;
     $default_value['Existing Overrides'] = TRUE;
   }
@@ -41,7 +41,7 @@ function features_override2_form($form, $form_state, $feature = NULL) {
       '#prefix' => '<div class="features-components"><h3>',
       '#suffix' => '</h3></div>',
     );
-    $override_list['New Overrides'] = features_override2_convert( features_override2_get_overrides());
+    $override_list['New Overrides'] = features_override_convert( features_override_get_overrides());
     $default_value['New Overrides'] = FALSE;
   }
 
@@ -62,7 +62,7 @@ function features_override2_form($form, $form_state, $feature = NULL) {
         $code = array();
         $options = array();
         $default_values = array();
-        features_override2_export_override( $code, '', $value, NULL);
+        features_override_export_override( $code, '', $value, NULL);
         $i = 0;
         foreach ($code as $line) {
           $options[$key . '.' . $i] = $line;
@@ -96,7 +96,7 @@ function features_override2_form($form, $form_state, $feature = NULL) {
       '#type' => 'submit',
       '#value' => t('Download feature'),
       '#weight' => 10,
-      '#submit' => array('features_override2_export_submit'),
+      '#submit' => array('features_override_export_submit'),
     );
   }
   return $form;
@@ -105,7 +105,7 @@ function features_override2_form($form, $form_state, $feature = NULL) {
 /**
  * Submit handler for features_export_form_build().
  */
-function features_override2_export_submit($form, &$form_state) {
+function features_override_export_submit($form, &$form_state) {
   module_load_include('inc', 'features', 'features.export');
   $feature = $form['#feature'];
   $code = $form['#code'];
@@ -125,7 +125,7 @@ function features_override2_export_submit($form, &$form_state) {
     }
   }
   // Generate download
-  $export['features']['features_override2'] = $data;
+  $export['features']['features_override'] = $data;
   if ($files = features_export_render($export, $module_name, TRUE)) {
     $filename = (!empty($version) ? "{$module_name}-{$version}" : $module_name) . '.tar';
 

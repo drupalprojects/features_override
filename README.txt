@@ -1,4 +1,4 @@
-Features Override 2 (Drupal 7)
+Features Override (Drupal 7)
 -------------------
 
 This module add a new Features exportable called "Feature Overrides" that 
