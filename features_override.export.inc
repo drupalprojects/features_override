@@ -265,9 +265,9 @@ function _features_override_set_deletions($default, $normal, &$deletions, $ignor
     }
     if ($object) {
       if (!property_exists($normal, $key)) {
-        $keys = array_merge($keys, array(array('type' => 'object', 'key' => $key)));
-        $deletions[features_override_keys_serialize($keys)] = array(
-          'keys' => $keys,
+        $_keys = array_merge($keys, array(array('type' => 'object', 'key' => $key)));
+        $deletions[features_override_keys_serialize($_keys)] = array(
+          'keys' => $_keys,
         );
       }
       elseif (property_exists($normal, $key) && (is_array($value) || is_object($value))) {
@@ -276,9 +276,9 @@ function _features_override_set_deletions($default, $normal, &$deletions, $ignor
     }
     else {
       if (!array_key_exists($key, $normal)) {
-        $keys = array_merge($keys, array(array('type' => 'array', 'key' => $key)));
-        $deletions[features_override_keys_serialize($keys)] = array(
-          'keys' => $keys,
+        $_keys = array_merge($keys, array(array('type' => 'array', 'key' => $key)));
+        $deletions[features_override_keys_serialize($_keys)] = array(
+          'keys' => $_keys,
         );
       }
       elseif (array_key_exists($key, $normal) && (is_array($value) || is_object($value))) {

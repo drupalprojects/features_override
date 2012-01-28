@@ -105,9 +105,11 @@ function features_override_features_export_render($module, $data, $export = NULL
       }
       if (!empty($overrides['deletions'])) {
         foreach ($overrides['deletions'] as $alter) {
-          $code_line = features_override_export_keys($alter['keys']);
-          $value_export = features_var_export($alter['value']);
-          $component_code[$component][] =  '  unset(' . $component_start . $code_line . ');';
+          $code_line = $component_start . features_override_export_keys($alter['keys']);
+          $test_line = $component_start . features_override_export_keys(array_slice($alter['keys'], 0, count($alter['keys']) - 1));
+          $component_code[$component][] = "  if (!empty(" . $test_line . ")) {";
+          $component_code[$component][] =  '    unset(' . $component_start . $code_line . ');';
+          $component_code[$component][] = "  }";
         }
       }
     }
