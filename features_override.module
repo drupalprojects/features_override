@@ -5,6 +5,8 @@
  */
 define('FEATURES_OVERRIDE_RECURSION_MARKER', 'features_override_recursion_marker');
 
+define('FEATURES_OVERRIDE_HOOK', 'features_override_default');
+
 /**
  * Implements hook_features_api().
  */
@@ -12,7 +14,7 @@ function features_override_features_api() {
   return array(
     'features_override' => array(
       'name' => t('Feature Overrides'),
-      'default_hook' => 'features_override_default',
+      'default_hook' => FEATURES_OVERRIDE_HOOK,
       'default_file' => FEATURES_DEFAULTS_INCLUDED_COMMON,
       'feature_source' => TRUE,
       'file' => drupal_get_path('module', 'features_override') . '/features_override.feature_hooks.inc',

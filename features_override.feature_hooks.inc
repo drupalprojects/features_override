@@ -61,7 +61,12 @@ function features_override_features_export($data, &$export, $module_name = '') {
 function features_override_features_export_render($module, $data, $export = NULL) {
   $list = $overrides_to_export = array();
 
+
   // Go through all data collecting the items exports to create.
+  $features_override_code = array(
+    ' // This code is only needed for informing features UI.',
+    '  $overrides = array();',
+  );
   foreach ($data as $identifier) {
     // Something is adding extra quote marks.
     list($component, $element, $keys) = features_override_parse_identifier($identifier);
@@ -73,21 +78,31 @@ function features_override_features_export_render($module, $data, $export = NULL
 
     // The entire component is being exported
     if (empty($keys) && isset($overrides[$element])) {
-      $overrides_to_export[$component][$element] = $overrides[$element];
+      $overrides_to_export[$component][$element] = $features_override_value = $overrides[$element];
     }
     // Just specific keys are being exported so add them if set.
     elseif (!empty($keys) && !empty($overrides[$element])) {
+      $features_override_value = array(
+        'additions' => array(),
+        'deletions' => array()
+      );
+
       if (isset($overrides[$element]['additions'][$keys])) {
         $overrides_to_export[$component][$element]['additions'][] = $overrides[$element]['additions'][$keys];
+        $features_override_value['additions'][] = $overrides[$element]['additions'][$keys];
       }
       elseif (isset($overrides[$element]['deletions'][$keys])) {
         $overrides_to_export[$component][$element]['deletions'][] = $overrides[$element]['deletions'][$keys];
+        $features_override_value['deletions'][] = $overrides[$element]['deletions'][$keys];
       }
+      $features_override_code[] = '  $overrides["' . $identifier  . '"] = ' . features_var_export($features_override_value, '  ') . ';';
     }
   }
+  // Create the default hook that defines all exported overrides.
+  $features_override_code[] = '';
+  $features_override_code[] = ' return $overrides;';
+  $list[FEATURES_OVERRIDE_HOOK] = implode("\n", $features_override_code);
 
-
-  $features_override_code = array();
   $component_code = array();
   foreach ($overrides_to_export as $component => $elements) {
     foreach ($elements as $element => $overrides) {
@@ -95,19 +110,19 @@ function features_override_features_export_render($module, $data, $export = NULL
       $component_start = "\$data['$element']";
       if (!empty($overrides['additions'])) {
         foreach ($overrides['additions'] as $alter) {
-          $code_line = $component_start . features_override_export_keys($alter['keys']);
-          $test_line = $component_start . features_override_export_keys(array_slice($alter['keys'], 0, count($alter['keys']) - 1));
+          $code_line = features_override_export_keys($alter['keys']);
+          $test_line = features_override_export_keys(array_slice($alter['keys'], 0, count($alter['keys']) - 1));
           $value_export = features_var_export($alter['value']);
-          $component_code[$component][] = "  if (!empty(" . $test_line . ")) {";
-          $component_code[$component][] = "    " . $code_line . ' = ' . $value_export . ';';
+          $component_code[$component][] = "  if (!empty(" . $component_start . $test_line . ")) {";
+          $component_code[$component][] = "    " . $component_start . $code_line . ' = ' . $value_export . ';';
           $component_code[$component][] = "  }";
         }
       }
       if (!empty($overrides['deletions'])) {
         foreach ($overrides['deletions'] as $alter) {
-          $code_line = $component_start . features_override_export_keys($alter['keys']);
-          $test_line = $component_start . features_override_export_keys(array_slice($alter['keys'], 0, count($alter['keys']) - 1));
-          $component_code[$component][] = "  if (!empty(" . $test_line . ")) {";
+          $code_line = features_override_export_keys($alter['keys']);
+          $test_line = features_override_export_keys(array_slice($alter['keys'], 0, count($alter['keys']) - 1));
+          $component_code[$component][] = "  if (!empty(" . $component_start . $test_line . ")) {";
           $component_code[$component][] =  '    unset(' . $component_start . $code_line . ');';
           $component_code[$component][] = "  }";
         }
