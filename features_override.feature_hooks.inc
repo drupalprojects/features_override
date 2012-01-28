@@ -35,7 +35,9 @@ function features_override_features_export_options() {
  * Implements hook_features_export().
  */
 function features_override_features_export($data, &$export, $module_name = '') {
+  $pipe = array('features_override' => array());
   $map = features_get_default_map('features_override');
+  static $options;
 
   foreach ($data as $identifier) {
     // If this override bundle is already provided by another module, remove the field
@@ -49,10 +51,45 @@ function features_override_features_export($data, &$export, $module_name = '') {
     }
     // If the field has not yet been exported, add it
     else {
-      $export['features']['features_override'][$identifier] = $identifier;
+      list($component, $element, $keys) = features_override_parse_identifier($identifier);
+
+
+      // If this is an 'all' key, see if anyone has exported any keys for this.
+      $convert = FALSE;
+      if (empty($keys)) {
+        foreach ($map as $identifier_key => $modle) {
+          if ($identifier != $identifier_key && strpos($identifier_key, $identifier . '.') === 0) {
+            $convert = TRUE;
+            break;
+          }
+        }
+      }
+
+      // At least one indivudal identifier is exported, so convert this
+      // to indivudal components.
+      if ($convert) {
+        unset($export['features']['features_override'][$identifier]);
+        if (!isset($options)) {
+          $options = features_override_features_export_options();
+        }
+        foreach ($options as $option_key => $option_name) {
+          list($options_component, $options_element, $options_keys) = features_override_parse_identifier($option_key);
+          if ($options_element == $element && empty($map[$option_key]) && empty($data[$option_key])) {
+            $pipe['features_override'][] = $option_key;
+          }
+        }
+      }
+      else {
+        $export['features']['features_override'][$identifier] = $identifier;
+        // Add dependency to defining module
+        $component_map = features_get_default_map($component);
+        if (!empty($component_map[$element])) {
+          $export['dependencies'][$component_map[$element]] = $component_map[$element];
+        }
+      }
     }
   }
-
+  return $pipe;
 }
 
 /**
