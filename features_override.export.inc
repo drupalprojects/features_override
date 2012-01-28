@@ -25,7 +25,14 @@ function features_override_parse_identifier($identifier) {
 }
 
 /**
- * Parses the identifier into indivudal parts.
+ * Runs serialize then replace double quotes with single.
+ *
+ * the .info file entries are wrapped in double quotes, which is not capatable
+ * with seralized due to it's double quotes, so this replaces double quotes with
+ * single.
+ *
+ * @param $keys
+ *   An array of keys to serialize.
  */
 function features_override_keys_serialize($keys) {
   return str_replace('"', "'", serialize($keys));

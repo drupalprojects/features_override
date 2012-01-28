@@ -95,9 +95,12 @@ function features_override_features_export_render($module, $data, $export = NULL
       $component_start = "\$data['$element']";
       if (!empty($overrides['additions'])) {
         foreach ($overrides['additions'] as $alter) {
-          $code_line = features_override_export_keys($alter['keys']);
+          $code_line = $component_start . features_override_export_keys($alter['keys']);
+          $test_line = $component_start . features_override_export_keys(array_slice($alter['keys'], 0, count($alter['keys']) - 1));
           $value_export = features_var_export($alter['value']);
-          $component_code[$component][] = "  " . $component_start . $code_line . ' = ' . $value_export . ';';
+          $component_code[$component][] = "  if (!empty(" . $test_line . ")) {";
+          $component_code[$component][] = "    " . $code_line . ' = ' . $value_export . ';';
+          $component_code[$component][] = "  }";
         }
       }
       if (!empty($overrides['deletions'])) {
