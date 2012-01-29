@@ -27,28 +27,15 @@ function features_override_features_api() {
  */
 function features_override_menu() {
   $items = array();
-  $items['admin/structure/features/%feature/override'] = array(
+  $items['admin/structure/features/override/%/%'] = array(
     'title' => 'Overrides',
-    'description' => 'Show override details.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('features_override_form', 3),
-    'load arguments' => array(3, TRUE),
+    'description' => 'Show override details for a component and element.',
+    'page callback' => 'features_override_render_differences',
+    'page arguments' => array(4, 5),
     'access callback' => 'user_access',
     'access arguments' => array('administer features'),
-    'type' => MENU_LOCAL_TASK,
     'file' => "features_override.admin.inc",
     'weight' => 10,
-  );
-  $items['admin/structure/features/overrides'] = array(
-    'title' => 'Overrides',
-    'description' => 'Display override details.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('features_override_form'),
-    'access callback' => 'user_access',
-    'access arguments' => array('administer features'),
-    'type' => MENU_LOCAL_TASK,
-    'file' => "features_override.admin.inc",
-    'weight' => 9,
   );
 
   return $items;

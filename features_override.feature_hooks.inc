@@ -101,7 +101,7 @@ function features_override_features_export_render($module, $data, $export = NULL
 
   // Go through all data collecting the items exports to create.
   $features_override_code = array(
-    ' // This code is only needed for informing features UI.',
+    '  // This code is only used for informing features UI.',
     '  $overrides = array();',
   );
   foreach ($data as $identifier) {
@@ -135,6 +135,7 @@ function features_override_features_export_render($module, $data, $export = NULL
       $features_override_code[] = '  $overrides["' . $identifier  . '"] = ' . features_var_export($features_override_value, '  ') . ';';
     }
   }
+
   // Create the default hook that defines all exported overrides.
   $features_override_code[] = '';
   $features_override_code[] = ' return $overrides;';
@@ -144,24 +145,14 @@ function features_override_features_export_render($module, $data, $export = NULL
   foreach ($overrides_to_export as $component => $elements) {
     foreach ($elements as $element => $overrides) {
       $component_code[$component] = isset($component_code[$component]) ? $component_code[$component] : array();
-      $component_start = "\$data['$element']";
       if (!empty($overrides['additions'])) {
         foreach ($overrides['additions'] as $alter) {
-          $code_line = features_override_export_keys($alter['keys']);
-          $test_line = features_override_export_keys(array_slice($alter['keys'], 0, count($alter['keys']) - 1));
-          $value_export = features_var_export($alter['value']);
-          $component_code[$component][] = "  if (!empty(" . $component_start . $test_line . ")) {";
-          $component_code[$component][] = "    " . $component_start . $code_line . ' = ' . $value_export . ';';
-          $component_code[$component][] = "  }";
+          $component_code[$component] = array_merge(features_override_features_export_render_addition($alter, $element), $component_code[$component]);
         }
       }
       if (!empty($overrides['deletions'])) {
         foreach ($overrides['deletions'] as $alter) {
-          $code_line = features_override_export_keys($alter['keys']);
-          $test_line = features_override_export_keys(array_slice($alter['keys'], 0, count($alter['keys']) - 1));
-          $component_code[$component][] = "  if (!empty(" . $component_start . $test_line . ")) {";
-          $component_code[$component][] =  '    unset(' . $component_start . $code_line . ');';
-          $component_code[$component][] = "  }";
+          $component_code[$component] = array_merge(features_override_features_export_render_deletion($alter, $element), $component_code[$component]);
         }
       }
     }
@@ -176,6 +167,35 @@ function features_override_features_export_render($module, $data, $export = NULL
   }
 
   return $list;
+}
+
+/**
+ * Renders the addition/change to an element.
+ */
+function features_override_features_export_render_addition($alter, $element) {
+  $code = array();
+  $component_start = "\$data['$element']";
+  $code_line = features_override_export_keys($alter['keys']);
+  $test_line = features_override_export_keys(array_slice($alter['keys'], 0, count($alter['keys']) - 1));
+  $value_export = features_var_export($alter['value']);
+  $code[] = "  if (!empty(" . $component_start . $test_line . ")) {";
+  $code[] = "    " . $component_start . $code_line . ' = ' . $value_export . ';';
+  $code[] = "  }";
+  return $code;
+}
+
+/**
+ * Renders the deletion to an element.
+ */
+function features_override_features_export_render_deletion($alter, $element) {
+  $code = array();
+  $component_start = "\$data['$element']";
+  $code_line = features_override_export_keys($alter['keys']);
+  $test_line = features_override_export_keys(array_slice($alter['keys'], 0, count($alter['keys']) - 1));
+  $code[] = "  if (!empty(" . $component_start . $test_line . ")) {";
+  $code[] =  '    unset(' . $component_start . $code_line . ');';
+  $code[] = "  }";
+  return $code;
 }
 
 /**
