@@ -12,6 +12,7 @@ module_load_include('export.inc', 'features_override');
  */
 function features_override_features_export_options() {
   $options = array();
+  drupal_add_js(drupal_get_path('module', 'features_override') . '/features_override_form.js');
 
   $overrides = features_override_get_overrides();
   foreach ($overrides as $component => $elements) {
