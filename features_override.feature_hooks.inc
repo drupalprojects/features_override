@@ -59,7 +59,7 @@ function features_override_features_export($data, &$export, $module_name = '') {
       $convert = FALSE;
       if (empty($keys)) {
         foreach ($map as $identifier_key => $modle) {
-          if ($identifier != $identifier_key && strpos($identifier_key, $identifier . '.') === 0 && !empty($map[$identifier]) && $map[$identifier] != $module_name) {
+          if ($identifier != $identifier_key && strpos($identifier_key, $identifier . '.') === 0 && !empty($map[$identifier_key])) {
             $convert = TRUE;
             break;
           }

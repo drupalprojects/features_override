@@ -34,6 +34,13 @@
                 return false;
               });
             }
+            else {
+              $parent_checkbox.attr('disabled', 'disabled');
+              $parent_checkbox.removeAttr('checked');
+              if (!$parent_label.parent().find('.description').length) {
+                $parent_label.append('<span class="description"> - ' + Drupal.t('This cannot be picked while individual alters are selected.') + '</span>');
+              }
+            }
           }
           else {
             $parent_checkbox.attr('disabled', 'disabled');
