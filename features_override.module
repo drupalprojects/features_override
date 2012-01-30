@@ -17,7 +17,7 @@ function features_override_features_api() {
       'default_hook' => FEATURES_OVERRIDE_HOOK,
       'default_file' => FEATURES_DEFAULTS_INCLUDED_COMMON,
       'feature_source' => TRUE,
-      'file' => drupal_get_path('module', 'features_override') . '/features_override.feature_hooks.inc',
+      'file' => drupal_get_path('module', 'features_override') . '/features_override.features.inc',
     ),
   );
 }
@@ -63,7 +63,7 @@ function features_override_features_override_ignore($component) {
  * Revert the parent settings when the override module is enabled
  */
 function features_override_modules_enabled($modules) {
-  module_load_include('feature_hooks.inc', 'features_override');
+  module_load_include('features.inc', 'features_override');
   module_load_include('export.inc', 'features');
   foreach ($modules as $module) {
     if (function_exists($module . '_features_override_default')) {
