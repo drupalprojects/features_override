@@ -57,8 +57,6 @@ function features_override_features_export($data, &$export, $module_name = '') {
     // If the field has not yet been exported, add it
     else {
       list($component, $element, $keys) = features_override_parse_identifier($identifier);
-
-
       // If this is an 'all' key, see if anyone has exported any keys for this.
       $convert = FALSE;
       if (empty($keys)) {
@@ -73,7 +71,6 @@ function features_override_features_export($data, &$export, $module_name = '') {
       // At least one indivudal identifier is exported, so convert this
       // to indivudal components.
       if ($convert) {
-        unset($export['features']['features_override'][$identifier]);
         if (!isset($options)) {
           $options = features_override_features_export_options();
         }
