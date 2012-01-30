@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Page callbacks features overrides admin pages.
+ */
+
+/**
  * Renders the differences for a component and element
  */
 function features_override_render_differences($component, $element) {
@@ -9,10 +14,10 @@ function features_override_render_differences($component, $element) {
   if ($differences = features_override_get_overrides($component, $element)) {
     if (!empty($_GET['key'])) {
       if (!empty($differences['additions'][$_GET['key']])) {
-        return '<pre>' .  implode("\n", features_override_features_export_render_addition($differences['additions'][$_GET['key']], $element)) . '</pre>';
+        return '<pre>' . implode("\n", features_override_features_export_render_addition($differences['additions'][$_GET['key']], $element)) . '</pre>';
       }
       elseif (!empty($differences['deletions'][$_GET['key']])) {
-        return '<pre>' .  implode("\n", features_override_features_export_render_deletion($differences['deletions'][$_GET['key']], $element)) . '</pre>';
+        return '<pre>' . implode("\n", features_override_features_export_render_deletion($differences['deletions'][$_GET['key']], $element)) . '</pre>';
       }
       else {
         return t('Unable to find referenced information.');

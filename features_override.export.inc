@@ -99,7 +99,7 @@ function features_override_module_component_overrides($module, $component) {
   if ($normal && is_array($normal) || is_object($normal)) {
     foreach ($normal as $name => $properties) {
       $component_overrides[$name] = array(
-        'additions' => array(), 
+        'additions' => array(),
         'deletions' => array(),
       );
       if (isset($default[$name])) {
@@ -208,7 +208,7 @@ function _features_override_set_additions($default, $normal, &$additions, $ignor
   foreach ($normal as $key => $value) {
     // Don't register extra fields as an override.
     // The 'content_has_extra_fields' flag is added to indicate that there are
-    // added fields. However, these should simply be added to a feature as 
+    // added fields. However, these should simply be added to a feature as
     // fields; they are not an override.
     // Ignore the marker used to track detect recursion.
     if (isset($ignore_keys[$key]) && ($level == $ignore_keys[$key])) {

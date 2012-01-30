@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Implements feature specific hooks
+ * Page callback for features override pages.
  */
 
 module_load_include('export.inc', 'features_override');
@@ -134,7 +134,7 @@ function features_override_features_export_render($module, $data, $export = NULL
         $overrides_to_export[$component][$element]['deletions'][] = $overrides[$element]['deletions'][$keys];
         $features_override_value['deletions'][] = $overrides[$element]['deletions'][$keys];
       }
-      $features_override_code[] = '  $overrides["' . $identifier  . '"] = ' . features_var_export($features_override_value, '  ') . ';';
+      $features_override_code[] = '  $overrides["' . $identifier . '"] = ' . features_var_export($features_override_value, '  ') . ';';
     }
   }
 
@@ -161,7 +161,7 @@ function features_override_features_export_render($module, $data, $export = NULL
   }
 
   $info = features_get_components();
-  foreach($component_code as $component => $code) {
+  foreach ($component_code as $component => $code) {
     $list[$info[$component]['default_hook'] . '_alter'] = array(
       'code' => implode("\n", $code),
       'args' => '&$data',
