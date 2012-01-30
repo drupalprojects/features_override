@@ -7,10 +7,16 @@
 
 /**
  * Parses the identifier into indivudal parts.
+ *
+ * As the keys may have a period in them, cannot use explode or similair ways.
+ *
+ * @param $identifier
+ *   A string in the form  <comonent>.<element>.<keys> or <component>.<element>.
+ * @return
+ *   An array of component, element, and keys string
+ * @see features_override_make_key()
  */
 function features_override_parse_identifier($identifier) {
-  // Identifier is <comonent>.<element>.<keys> or <component>.<element>.
-  // Need special handling since key is serialized so can't explode.
   $first_period = strpos($identifier, '.');
   $component = substr($identifier, 0, $first_period);
   if ($second_period = strpos($identifier, '.', $first_period + 1)) {
@@ -29,6 +35,8 @@ function features_override_parse_identifier($identifier) {
  *
  * @param $keys
  *   An array of keys.
+ * @return
+ *   A string representation of the keys.
  */
 function features_override_make_key($keys) {
   $return_keys = array();
@@ -45,6 +53,8 @@ function features_override_make_key($keys) {
  *   A component key that's defined via hook_features_api.
  * @param $element_key
  *   A key identifieing an element that's been overriden.
+ * @param $reset
+ *   Reset the internal cache of overrides gathered.
  */
 function features_override_get_overrides($component_key = FALSE, $element_key = FALSE, $reset = FALSE) {
   static $cache;
@@ -61,7 +71,7 @@ function features_override_get_overrides($component_key = FALSE, $element_key = 
       }
 
       foreach (array_intersect(array_unique($modules), module_list()) as $module) {
-        if ($differences = array_filter(features_override_module_component_overrides($module, $component))) {
+        if ($differences = array_filter(features_override_module_component_overrides($module, $component, $reset))) {
           $cache[$component] = isset($cache[$component]) ? array_merge($differences, $cache[$component]) : $differences;
         }
       }
@@ -80,9 +90,18 @@ function features_override_get_overrides($component_key = FALSE, $element_key = 
 
 
 /**
- * Get overrides for specific module/component
+ * Get overrides for specific module/component.
+ *
+ * @param $module
+ *   An enabled module to find overrides for it's components.
+ * @param $component
+ *   A type of component to find overrides for.
+ * @param $reset
+ *   Reset the internal cache of overrides gathered.
+ * @return
+ *   An array of overrides found.
  */
-function features_override_module_component_overrides($module, $component) {
+function features_override_module_component_overrides($module, $component, $reset = FALSE) {
   static $cache = array();
 
   if (isset($cache[$module][$component])) {
@@ -119,8 +138,10 @@ function features_override_module_component_overrides($module, $component) {
 }
 
 /**
- * "Sanitizes" an array recursively, performing:
- * - Sort an array by its keys (assoc) or values (non-assoc).
+ * Sorts an array by its keys (assoc) or values (non-assoc).
+ *
+ * @param $array
+ *   An array that needs to be sorted.
  */
 function _features_override_sanitize(&$array) {
   if (is_array($array)) {
@@ -141,8 +162,7 @@ function _features_override_sanitize(&$array) {
 
 
 /**
- * Add a variable to the hive of arrays and objects which
- * are tracked for whether they have recursive entries
+ * Add the recurssion marker key to hive to check to prevent recursion.
  *
  * @param &$bee
  *   Array or object.
@@ -169,6 +189,8 @@ function _features_override_hive(&$bee = NULL) {
 
 /**
  * Remove markers from previously marked elements.
+ *
+ * @see _features_override_hive()
  */
 function _features_override_leave_hive() {
   $hive = _features_override_hive();
@@ -190,12 +212,24 @@ function _features_override_recursion_marker(&$normal, $object) {
   _features_override_hive($normal);
   // Test for references in order to prevent endless recursion loops.
   $recursion_marker = FEATURES_OVERRIDE_RECURSION_MARKER;
-  $r = (int) ($object ? @$normal->$recursion_marker : @$normal[$recursion_marker]);
-  return $r;
+  return (bool) ($object ? @$normal->$recursion_marker : @$normal[$recursion_marker]);
 }
 
 /**
- * Helper function to set the additions and alters between default and normal components.
+ * Helper function to set the additions between default and normal features.
+ *
+ * @param $default
+ *   The default defination of a component.
+ * @param $normal
+ *   The current defination of a component.
+ * @param $additions
+ *   An array of currently gathered additions.
+ * @param $ignore_keys
+ *   Keys to ignore while processing element.
+ * @param $level
+ *   How many levels deep into object.
+ * @param $keys
+ *   The keys for this level.
  */
 function _features_override_set_additions($default, $normal, &$additions, $ignore_keys = array(), $level = 0, $keys = array()) {
   $object = is_object($normal);
@@ -246,6 +280,19 @@ function _features_override_set_additions($default, $normal, &$additions, $ignor
 
 /**
  * Helper function to set the deletions between default and normal features.
+ *
+ * @param $default
+ *   The default defination of a component.
+ * @param $normal
+ *   The current defination of a component.
+ * @param $deletions
+ *   An array of currently gathered deletions.
+ * @param $ignore_keys
+ *   Keys to ignore while processing element.
+ * @param $level
+ *   How many levels deep into object.
+ * @param $keys
+ *   The keys for this level.
  */
 function _features_override_set_deletions($default, $normal, &$deletions, $ignore_keys = array(), $level = 0, $keys = array()) {
   $object = is_object($default);
@@ -289,7 +336,13 @@ function _features_override_set_deletions($default, $normal, &$deletions, $ignor
 }
 
 /**
- * Exports an array that describes nesting of keys.
+ * Creates a string representation of an array of keys.
+ *
+ * @param $keys
+ *   An array of keys with their associate types.
+ *
+ * @return
+ *   A string representation of the keys.
  */
 function features_override_export_keys($keys) {
   $line = '';

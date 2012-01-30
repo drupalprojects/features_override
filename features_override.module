@@ -1,10 +1,15 @@
 <?php
 
 /**
- * Key to use when marking properties for recursion.
+ * @file
+ * Module file for features overrides.
+ * Includes core/contrib hook implementations.
  */
-define('FEATURES_OVERRIDE_RECURSION_MARKER', 'features_override_recursion_marker');
 
+
+// Key to use when marking properties for recursion.
+define('FEATURES_OVERRIDE_RECURSION_MARKER', 'features_override_recursion_marker');
+// Default hook for features overrides.
 define('FEATURES_OVERRIDE_HOOK', 'features_override_default');
 
 /**
@@ -27,6 +32,7 @@ function features_override_features_api() {
  */
 function features_override_menu() {
   $items = array();
+
   $items['admin/structure/features/override/%/%'] = array(
     'title' => 'Overrides',
     'description' => 'Show override details for a component and element.',
@@ -45,7 +51,7 @@ function features_override_menu() {
  * Implements hook_features_override_ignore().
  */
 function features_override_features_override_ignore($component) {
-  // determine which keys need to be ignored for override diff for various components
+  // Determine which keys need to be ignored for override diff for various components.
   $ignores = array();
   switch ($component) {
     case 'views_view':
@@ -60,7 +66,7 @@ function features_override_features_override_ignore($component) {
 /**
  * Implements hook_modules_enabled().
  *
- * Revert the parent settings when the override module is enabled
+ * Revert the parent settings when the override module is enabled.
  */
 function features_override_modules_enabled($modules) {
   module_load_include('features.inc', 'features_override');
