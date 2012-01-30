@@ -11,8 +11,8 @@ function features_override_render_differences($component, $element) {
       if (!empty($differences['additions'][$_GET['key']])) {
         return '<pre>' .  implode("\n", features_override_features_export_render_addition($differences['additions'][$_GET['key']], $element)) . '</pre>';
       }
-      elseif (!empty($differences['differences'][$_GET['key']])) {
-        return '<pre>' .  implode("\n", features_override_features_export_render_deletion($differences['differences'][$_GET['key']], $element)) . '</pre>';
+      elseif (!empty($differences['deletions'][$_GET['key']])) {
+        return '<pre>' .  implode("\n", features_override_features_export_render_deletion($differences['deletions'][$_GET['key']], $element)) . '</pre>';
       }
       else {
         return t('Unable to find referenced information.');
@@ -25,8 +25,8 @@ function features_override_render_differences($component, $element) {
           $code = array_merge(features_override_features_export_render_addition($alter, $element), $code);
         }
       }
-      if (!empty($differences['differences'])) {
-        foreach ($differences['differences'] as $alter) {
+      if (!empty($differences['deletions'])) {
+        foreach ($differences['deletions'] as $alter) {
           $code = array_merge(features_override_features_export_render_deletion($alter, $element), $code);
         }
       }

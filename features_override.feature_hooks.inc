@@ -11,7 +11,7 @@ module_load_include('export.inc', 'features_override');
  * Implements hook_features_export_options().
  */
 function features_override_features_export_options() {
-  $options = array();
+  $options = $links = array();
   drupal_add_js(drupal_get_path('module', 'features_override') . '/features_override_form.js');
 
   $overrides = features_override_get_overrides();
@@ -20,14 +20,18 @@ function features_override_features_export_options() {
       $identifier = "{$component}.{$key}";
       $identifier_spaced = "{$component} {$key} ";
       $options[$identifier] = $identifier_spaced . ' - all changes ';
+      $links[str_replace('.', '__44__', $identifier)] = url('admin/structure/features/override/' . $component . '/' . $key);
       foreach ($element['additions'] as $change_key => $changes) {
         $options[$identifier . '.' . $change_key] = " - " . $identifier_spaced . ' addition: of ' . features_override_export_keys($changes['keys']);
+        $links[str_replace('.', '__44__', $identifier . '.' . $change_key)] = url('admin/structure/features/override/' . $component . '/' . $key, array('query' => array('key' => $change_key)));
       }
       foreach ($element['deletions'] as $change_key => $changes) {
         $options[$identifier . '.' . $change_key] = ' - ' . $identifier_spaced . ' deletion of ' . features_override_export_keys($changes['keys']);
+        $links[str_replace('.', '__44__', $identifier . '.' . $change_key)] = url('admin/structure/features/override/' . $component . '/' . $key, array('query' => array('key' => $change_key)));
       }
     }
   }
+  drupal_add_js(array('features_override_links' => $links), 'setting');
 
   return $options;
 }

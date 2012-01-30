@@ -4,6 +4,10 @@
       $('input[type=checkbox][name^="sources[features_override]"]:not(.features-override-form-processed)', context).each(function (i) {
         var $parent_checkbox = $(this);
         var $parent_label = $parent_checkbox.parent().find('label');
+        // Create a link that links to the exact differences from the label.
+        if (Drupal.settings.features_override_links[this.value]) {
+          $parent_label.wrapInner('<a href="' + Drupal.settings.features_override_links[this.value] + '" target="_blank"></a>');
+        }
         $parent_checkbox.addClass('features-override-form-processed');
         if (this.value.split("__44__").length - 1 == 1) {
           // See if any children.
