@@ -63,6 +63,8 @@ function features_override_features_override_ignore($component) {
  * Revert the parent settings when the override module is enabled
  */
 function features_override_modules_enabled($modules) {
+  module_load_include('feature_hooks.inc', 'features_override');
+  module_load_include('export.inc', 'features');
   foreach ($modules as $module) {
     if (function_exists($module . '_features_override_default')) {
       features_override_features_rebuild($module);

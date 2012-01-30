@@ -25,17 +25,17 @@ function features_override_parse_identifier($identifier) {
 }
 
 /**
- * Runs serialize then replace double quotes with single.
- *
- * the .info file entries are wrapped in double quotes, which is not capatable
- * with seralized due to it's double quotes, so this replaces double quotes with
- * single.
+ * Makes a distinct string key from an array of keys.
  *
  * @param $keys
- *   An array of keys to serialize.
+ *   An array of keys.
  */
-function features_override_keys_serialize($keys) {
-  return str_replace('"', "'", serialize($keys));
+function features_override_make_key($keys) {
+  $return_keys = array();
+  foreach ($keys as $key) {
+    $return_keys[] = $key['key'];
+  }
+  return implode('|', $return_keys);
 }
 
 /**
@@ -220,7 +220,7 @@ function _features_override_set_additions($default, $normal, &$additions, $ignor
     if ($object) {
       if (!property_exists($default, $key) || (is_scalar($value) && ($default->$key !== $value))) {
         $keys = array_merge($keys, array(array('type' => 'object', 'key' => $key)));
-        $additions[features_override_keys_serialize($keys)] = array(
+        $additions[features_override_make_key($keys)] = array(
           'keys' => $keys,
           'value' => $value,
         );
@@ -232,7 +232,7 @@ function _features_override_set_additions($default, $normal, &$additions, $ignor
     elseif (is_array($normal)) {
       if (!array_key_exists($key, $default) || (is_scalar($value) && ($default[$key] !== $value))) {
         $keys = array_merge($keys, array(array('type' => 'array', 'key' => $key)));
-        $additions[features_override_keys_serialize($keys)] = array(
+        $additions[features_override_make_key($keys)] = array(
           'keys' => $keys,
           'value' => $value,
         );
@@ -266,7 +266,7 @@ function _features_override_set_deletions($default, $normal, &$deletions, $ignor
     if ($object) {
       if (!property_exists($normal, $key)) {
         $_keys = array_merge($keys, array(array('type' => 'object', 'key' => $key)));
-        $deletions[features_override_keys_serialize($_keys)] = array(
+        $deletions[features_override_make_key($_keys)] = array(
           'keys' => $_keys,
         );
       }
@@ -277,7 +277,7 @@ function _features_override_set_deletions($default, $normal, &$deletions, $ignor
     else {
       if (!array_key_exists($key, $normal)) {
         $_keys = array_merge($keys, array(array('type' => 'array', 'key' => $key)));
-        $deletions[features_override_keys_serialize($_keys)] = array(
+        $deletions[features_override_make_key($_keys)] = array(
           'keys' => $_keys,
         );
       }
