@@ -74,9 +74,10 @@ function features_override_features_export($data, &$export, $module_name = '') {
         if (!isset($options)) {
           $options = features_override_features_export_options();
         }
+        unset($export['features']['features_override'][$identifier]);
         foreach ($options as $option_key => $option_name) {
           list($options_component, $options_element, $options_keys) = features_override_parse_identifier($option_key);
-          if ($options_element == $element && empty($map[$option_key]) && empty($data[$option_key])) {
+          if ($options_element == $element && (empty($map[$option_key]) || $map[$option_key] == $module_name) && empty($data[$option_key])) {
             $pipe['features_override'][] = $option_key;
           }
         }
