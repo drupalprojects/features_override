@@ -57,7 +57,9 @@ function features_override_features_override_ignore($component) {
     case 'views_view':
       $ignores['display_handler'] = 0;
       $ignores['handler'] = 2;
-      $ignores['localization_plugin'] = 0;
+      // Views automatically adds these two on export to set values.
+      $ignores['api_version'] = 0;
+      $ignores['disabled'] = 0;
       break;
     case 'image':
       $ignores['module'] = 0;
