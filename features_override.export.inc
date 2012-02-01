@@ -61,21 +61,19 @@ function features_override_get_overrides($component_key = FALSE, $element_key = 
   if (!isset($cache) || $reset) {
     $cache = array();
 
+    features_include();
     foreach (features_get_components() as $component => $info) {
-      if (empty($info['default_hook']) || $component == 'features_override') {
+      if (empty($info['default_hook']) || $component == 'features_override' || !features_get_default_alter_hook($component) | !features_hook($component, 'features_export_render')) {
         continue;
       }
-      $modules = array();
-      foreach (array_filter(features_get_component_map($component)) as $element => $element_modules) {
-        $modules = array_merge($element_modules, $modules);
-      }
 
-      foreach (array_intersect(array_unique($modules), module_list()) as $module) {
+      features_include_defaults($component);
+      foreach (module_implements($info['default_hook']) as $module) {
         if ($differences = array_filter(features_override_module_component_overrides($module, $component, $reset))) {
           $cache[$component] = isset($cache[$component]) ? array_merge($differences, $cache[$component]) : $differences;
         }
       }
-      $cache[$component] = isset($cache[$component]) ? array_filter(array_unique($cache[$component])) : array();
+      $cache[$component] = isset($cache[$component]) ? array_filter($cache[$component]) : array();
     }
   }
 
@@ -108,8 +106,21 @@ function features_override_module_component_overrides($module, $component, $rese
     return $cache[$module][$component];
   }
 
+  // Allows overriding non-feature controlled code.
+  $default_hook = features_get_default_hooks($component);
+  $default = module_invoke($module, $default_hook);
   $normal = features_get_normal($component, $module);
-  $default = features_get_default($component, $module, FALSE, TRUE);
+  // This indicates it is likely not controlled by features, so fetch manually.
+  if (!$normal) {
+    $code = array_pop(features_invoke($component, 'features_export_render', $module, array_keys($default), NULL));
+    if (!$code) {
+      return FALSE;
+    }
+    else {
+      $normal = eval($code);
+    }
+  }
+
   // Can't use _features_sanitize as that resets some keys.
   _features_override_sanitize($normal);
   _features_override_sanitize($default);
@@ -253,9 +264,9 @@ function _features_override_set_additions($default, $normal, &$additions, $ignor
     }
     if ($object) {
       if (!property_exists($default, $key) || (is_scalar($value) && ($default->$key !== $value))) {
-        $keys = array_merge($keys, array(array('type' => 'object', 'key' => $key)));
-        $additions[features_override_make_key($keys)] = array(
-          'keys' => $keys,
+        $_keys = array_merge($keys, array(array('type' => 'object', 'key' => $key)));
+        $additions[features_override_make_key($_keys)] = array(
+          'keys' => $_keys,
           'value' => $value,
         );
       }
@@ -265,9 +276,9 @@ function _features_override_set_additions($default, $normal, &$additions, $ignor
     }
     elseif (is_array($normal)) {
       if (!array_key_exists($key, $default) || (is_scalar($value) && ($default[$key] !== $value))) {
-        $keys = array_merge($keys, array(array('type' => 'array', 'key' => $key)));
-        $additions[features_override_make_key($keys)] = array(
-          'keys' => $keys,
+        $_keys = array_merge($keys, array(array('type' => 'array', 'key' => $key)));
+        $additions[features_override_make_key($_keys)] = array(
+          'keys' => $_keys,
           'value' => $value,
         );
       }

@@ -163,7 +163,7 @@ function features_override_features_export_render($module, $data, $export = NULL
 
   $info = features_get_components();
   foreach ($component_code as $component => $code) {
-    $list[$info[$component]['default_hook'] . '_alter'] = array(
+    $list[features_get_default_alter_hook($component) . '_alter'] = array(
       'code' => implode("\n", $code),
       'args' => '&$data',
     );
@@ -180,7 +180,7 @@ function features_override_features_export_render_addition($alter, $element) {
   $component_start = "\$data['$element']";
   $code_line = features_override_export_keys($alter['keys']);
   $test_line = features_override_export_keys(array_slice($alter['keys'], 0, count($alter['keys']) - 1));
-  $value_export = features_var_export($alter['value']);
+  $value_export = features_var_export($alter['value'], '    ');
   $code[] = "  if (!empty(" . $component_start . $test_line . ")) {";
   $code[] = "    " . $component_start . $code_line . ' = ' . $value_export . ';';
   $code[] = "  }";
