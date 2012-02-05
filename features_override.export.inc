@@ -101,6 +101,7 @@ function features_override_get_overrides($component_key = FALSE, $element_key = 
  */
 function features_override_module_component_overrides($module, $component, $reset = FALSE) {
   static $cache = array();
+  module_load_include('hooks.inc', 'features_override');
 
   if (isset($cache[$module][$component])) {
     return $cache[$module][$component];
@@ -124,6 +125,12 @@ function features_override_module_component_overrides($module, $component, $rese
   // Can't use _features_sanitize as that resets some keys.
   _features_override_sanitize($normal);
   _features_override_sanitize($default);
+  
+  $context = array(
+    'component' => $component,
+    'module' => $module,
+  );
+
   $component_overrides = array();
   $ignore_keys = module_invoke_all('features_override_ignore', $component);
   if ($normal && is_array($normal) || is_object($normal)) {
@@ -133,6 +140,7 @@ function features_override_module_component_overrides($module, $component, $rese
         'deletions' => array(),
       );
       if (isset($default[$name])) {
+        drupal_alter('features_override_component_overrides', $default[$name], $properties, $context);
         _features_override_set_additions($default[$name], $properties, $component_overrides[$name]['additions'], $ignore_keys);
         _features_override_leave_hive($default[$name]);
         _features_override_set_deletions($default[$name], $properties, $component_overrides[$name]['deletions'], $ignore_keys);

@@ -1,0 +1,47 @@
+<?php
+
+/**
+ * @file
+ * Contains implementation of features_override's hooks for other modules.
+ */
+
+/**
+ * Implements hook_features_override_component_overrides_alter().
+ */
+function image_features_override_component_overrides_alter(&$default, &$normal, $context) {
+  if ($context['component'] == 'image') {
+    // Effects have their keys changed on override. This resets them to numeric.
+    $normal['effects'] = array_values($normal['effects']);
+    $default['effects'] = array_values($default['effects']);
+  }
+}
+
+/**
+ * Implements hook_features_override_export_render_addition() for image.
+ */
+function image_features_override_export_render_addition($alter, $element) {
+  $code = array();
+  $component_start = "\$data['$element']";
+  $code_line = features_override_export_keys($alter['keys']);
+  $test_line = features_override_export_keys(array_slice($alter['keys'], 0, count($alter['keys']) - 1));
+  $value_export = features_var_export($alter['value'], '    ');
+  $code[] = "  if (!empty(" . $component_start . $test_line . ") && " . $component_start . "['storage'] == IMAGE_STORAGE_DEFAULT) {";
+  $code[] = "    " . $component_start . $code_line . ' = ' . $value_export . ';';
+  $code[] = "  }";
+  return $code;
+}
+
+/**
+ * Implements hook_features_override_export_render_addition() for image.
+ */
+function image_features_override_export_render_deletion($alter, $element) {
+  $code = array();
+  $component_start = "\$data['$element']";
+  $code_line = features_override_export_keys($alter['keys']);
+  $test_line = features_override_export_keys(array_slice($alter['keys'], 0, count($alter['keys']) - 1));
+  $value_export = features_var_export($alter['value'], '    ');
+  $code[] = "  if (!empty(" . $component_start . $test_line . ") && " . $component_start . "['storage'] == IMAGE_STORAGE_DEFAULT) {";
+  $code[] = "    " . $component_start . $code_line . ' = ' . $value_export . ';';
+  $code[] = "  }";
+  return $code;
+}
