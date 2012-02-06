@@ -41,7 +41,7 @@ function image_features_override_export_render_deletion($alter, $element) {
   $test_line = features_override_export_keys(array_slice($alter['keys'], 0, count($alter['keys']) - 1));
   $value_export = features_var_export($alter['value'], '    ');
   $code[] = "  if (!empty(" . $component_start . $test_line . ") && " . $component_start . "['storage'] == IMAGE_STORAGE_DEFAULT) {";
-  $code[] = "    " . $component_start . $code_line . ' = ' . $value_export . ';';
+  $code[] =  '    unset(' . $component_start . $code_line . ');';
   $code[] = "  }";
   return $code;
 }

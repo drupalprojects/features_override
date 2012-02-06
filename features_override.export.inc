@@ -267,7 +267,7 @@ function _features_override_set_additions($default, $normal, &$additions, $ignor
     if (isset($ignore_keys[$key]) && ($level == $ignore_keys[$key])) {
       continue;
     }
-    if (!is_numeric($key) && in_array($key, array('content_has_extra_fields', FEATURES_OVERRIDE_RECURSION_MARKER))) {
+    if (!is_numeric($key) && in_array($key, array('content_has_extra_fields', FEATURES_OVERRIDE_RECURSION_MARKER, TRUE))) {
       return;
     }
     if ($object) {
@@ -325,10 +325,12 @@ function _features_override_set_deletions($default, $normal, &$deletions, $ignor
     if (isset($ignore_keys[$key]) && ($level == $ignore_keys[$key])) {
       continue;
     }
+
     // Ignore the marker used to track detect recursion.
-    if ($key == FEATURES_OVERRIDE_RECURSION_MARKER) {
+    if ($key === FEATURES_OVERRIDE_RECURSION_MARKER) {
       continue;
     }
+    
     if ($object) {
       if (!property_exists($normal, $key)) {
         $_keys = array_merge($keys, array(array('type' => 'object', 'key' => $key)));
