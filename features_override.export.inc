@@ -101,11 +101,13 @@ function features_override_get_overrides($component_key = FALSE, $element_key = 
  */
 function features_override_module_component_overrides($module, $component, $reset = FALSE) {
   static $cache = array();
-  module_load_include('hooks.inc', 'features_override');
 
   if (isset($cache[$module][$component])) {
     return $cache[$module][$component];
   }
+  module_load_include('hooks.inc', 'features_override');
+  features_include();
+  features_include_defaults($component);
 
   // Allows overriding non-feature controlled code.
   $default_hook = features_get_default_hooks($component);
@@ -125,7 +127,7 @@ function features_override_module_component_overrides($module, $component, $rese
   // Can't use _features_sanitize as that resets some keys.
   _features_override_sanitize($normal);
   _features_override_sanitize($default);
-  
+
   $context = array(
     'component' => $component,
     'module' => $module,
@@ -267,7 +269,7 @@ function _features_override_set_additions($default, $normal, &$additions, $ignor
     if (isset($ignore_keys[$key]) && ($level == $ignore_keys[$key])) {
       continue;
     }
-    if (!is_numeric($key) && in_array($key, array('content_has_extra_fields', FEATURES_OVERRIDE_RECURSION_MARKER, TRUE))) {
+    if (!is_numeric($key) && in_array($key, array('content_has_extra_fields', FEATURES_OVERRIDE_RECURSION_MARKER), TRUE)) {
       return;
     }
     if ($object) {
