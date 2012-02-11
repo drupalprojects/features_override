@@ -270,7 +270,7 @@ function _features_override_set_additions($default, $normal, &$additions, $ignor
       continue;
     }
     if (!is_numeric($key) && in_array($key, array('content_has_extra_fields', FEATURES_OVERRIDE_RECURSION_MARKER), TRUE)) {
-      return;
+      continue;
     }
     if ($object) {
       if (!property_exists($default, $key) || (is_scalar($value) && ($default->$key !== $value))) {
