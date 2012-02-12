@@ -369,3 +369,57 @@ function _features_override_remove_recursion_markers(&$test) {
     }
   }
 }
+
+/**
+ * Drupal-friendly var_export().
+ *
+ * @param $var
+ *   The variable to export.
+ * @param $prefix
+ *   A prefix that will be added at the beginning of every lines of the output.
+ * @return
+ *   The variable exported in a way compatible to Drupal's coding standards.
+ */
+function features_override_var_export($var, $prefix = '') {
+  if (is_array($var) || is_object($var)) {
+    // Special causing array so calls features_override_var_export instead of
+    // features_var_export.
+    if (is_array($var)) {
+      if (empty($var)) {
+        $output = 'array()';
+      }
+      else {
+        $output = "array(\n";
+        foreach ($var as $key => $value) {
+          // Using normal var_export on the key to ensure correct quoting.
+          $output .= "  " . var_export($key, TRUE) . " => " . features_override_var_export($value, '  ', FALSE) . ",\n";
+        }
+        $output .= ')';
+      }
+    }
+    // Objects do not export cleanily.
+    else {
+      if (method_exists($var, 'export')) {
+        $output = $var->export();
+      }
+      elseif (get_class($var) === 'stdClass') {
+        $output = '(object) ' . features_override_var_export((array) $var, $prefix);
+      }
+      else {
+        // Ugly, but custom object with no clue how to export.
+        // var_export produces unusable code in this case.
+        $output = 'unserialize(' . var_export(serialize($var), true) . ')';
+      }
+    }
+  }
+  else {
+    module_load_include('export.inc', 'features');
+    $output = features_var_export($var);
+  }
+
+  if ($prefix) {
+    $output = str_replace("\n", "\n$prefix", $output);
+  }
+
+  return $output;
+}

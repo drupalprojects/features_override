@@ -139,7 +139,7 @@ function features_override_features_export_render($module, $data, $export = NULL
     }
     $features_override_code[] = '';
     $features_override_code[] = "  // Exported overrides for: $component $element";
-    $features_override_code[] = '  $overrides["' . $identifier . '"] = ' . features_var_export($features_override_value, '  ') . ';';
+    $features_override_code[] = '  $overrides["' . $identifier . '"] = ' . features_override_var_export($features_override_value, '  ') . ';';
   }
 
   // Create the default hook that defines all exported overrides.
@@ -188,7 +188,7 @@ function features_override_features_export_render_addition($alter, $element, $co
     $component_start = "\$data['$element']";
     $code_line = features_override_export_keys($alter['keys']);
     $test_line = features_override_export_keys(array_slice($alter['keys'], 0, count($alter['keys']) - 1));
-    $value_export = features_var_export($alter['value'], '    ');
+    $value_export = features_override_var_export($alter['value'], '    ');
     $code[] = "  if (isset(" . $component_start . $test_line . ")) {";
     $code[] = "    " . $component_start . $code_line . ' = ' . $value_export . ';';
     $code[] = "  }";
@@ -250,5 +250,3 @@ function features_override_features_rebuild($module) {
   // rebuild those parent components
   features_rebuild($parents);
 }
-
-
