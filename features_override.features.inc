@@ -189,7 +189,7 @@ function features_override_features_export_render_addition($alter, $element, $co
     $code_line = features_override_export_keys($alter['keys']);
     $test_line = features_override_export_keys(array_slice($alter['keys'], 0, count($alter['keys']) - 1));
     $value_export = features_var_export($alter['value'], '    ');
-    $code[] = "  if (!empty(" . $component_start . $test_line . ")) {";
+    $code[] = "  if (isset(" . $component_start . $test_line . ")) {";
     $code[] = "    " . $component_start . $code_line . ' = ' . $value_export . ';';
     $code[] = "  }";
     return $code;
@@ -209,7 +209,7 @@ function features_override_features_export_render_deletion($alter, $element, $co
     $component_start = "\$data['$element']";
     $code_line = features_override_export_keys($alter['keys']);
     $test_line = features_override_export_keys(array_slice($alter['keys'], 0, count($alter['keys']) - 1));
-    $code[] = "  if (!empty(" . $component_start . $test_line . ")) {";
+    $code[] = "  if (isset(" . $component_start . $test_line . ")) {";
     $code[] =  '    unset(' . $component_start . $code_line . ');';
     $code[] = "  }";
     return $code;
