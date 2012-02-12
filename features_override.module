@@ -5,24 +5,29 @@
  * Module file for features overrides.
  * Includes core/contrib hook implementations.
  */
-
-
+ 
 // Key to use when marking properties for recursion.
 define('FEATURES_OVERRIDE_RECURSION_MARKER', 'features_override_recursion_marker');
-// Default hook for features overrides.
-define('FEATURES_OVERRIDE_HOOK', 'features_override_default');
 
 /**
  * Implements hook_features_api().
  */
 function features_override_features_api() {
+  $path = drupal_get_path('module', 'features_override') . '/features_override.features.inc';
   return array(
-    'features_override' => array(
-      'name' => t('Feature Overrides'),
-      'default_hook' => FEATURES_OVERRIDE_HOOK,
+    'features_override_items' => array(
+      'name' => t('Feature Overrides group overrides'),
+      'default_hook' => 'features_override_default_items',
       'default_file' => FEATURES_DEFAULTS_INCLUDED_COMMON,
       'feature_source' => TRUE,
-      'file' => drupal_get_path('module', 'features_override') . '/features_override.features.inc',
+      'file' => $path,
+    ),
+    'features_override_overrides' => array(
+      'name' => t('Feature Overrides overrides (individual -- advanced)'),
+      'default_hook' => 'features_override_default_overrides',
+      'default_file' => FEATURES_DEFAULTS_INCLUDED_COMMON,
+      'feature_source' => TRUE,
+      'file' => $path,
     ),
   );
 }

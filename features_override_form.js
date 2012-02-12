@@ -1,59 +1,57 @@
 (function ($) {
   Drupal.behaviors.features_override_form = {
     attach: function(context, settings) {
-      $('input[type=checkbox][name^="sources[features_override]"]:not(.features-override-form-processed)', context).each(function (i) {
+      $('#edit-sources-features-override-overrides:not(.features-override-processed)', context)
+        .prepend(Drupal.t('Advanced usage only. Allows you to select individual changes only to export.'))
+        .addClass('features-override-processed');
+
+      $('input[type=checkbox][name^="sources[features_override_items]"]:not(.features-override-form-processed)', context).each(function (i) {
         var $parent_checkbox = $(this);
         $parent_checkbox.addClass('features-override-form-processed');
         var $parent_label = $parent_checkbox.parent().find('label');
         // Create a link that links to the exact differences from the label.
-        if (Drupal.settings.features_override_links[this.value]) {
-          $parent_label.append(' <a href="' + Drupal.settings.features_override_links[this.value] + '" target="_blank">' + Drupal.t('view') + '</a>');
+        if (Drupal.settings.features_override_links['main'][this.value]) {
+          $parent_label.append(' <a href="' + Drupal.settings.features_override_links['main'][this.value] + '" target="_blank">' + Drupal.t('view') + '</a>');
         }
-        if (this.value.split("__44__").length - 1 == 1) {
-          // See if any children.
-          var $children = $('input[type=checkbox][name^="sources[features_override]"][value^="' + this.value + '__44__' + '"]', context).parent();
-          if ($children.length) {
-            $children.wrapAll('<div class="features-override-children-wrapper"></div>');
-            $children.find('input').change(function() {
-              if ($children.find('input:checked').length) {
-                $parent_checkbox.attr('disabled', 'disabled');
-                $parent_checkbox.removeAttr('checked');
-                if (!$parent_label.parent().find('.description').length) {
-                  $parent_label.append('<span class="description"> - ' + Drupal.t('This cannot be picked while individual alters are selected.') + '</span>');
-                }
-              }
-              else {
-                $parent_checkbox.removeAttr('disabled');
-                $parent_label.parent().find('.description').remove();
-              }
-            });
-            // Hide the elements till someone wants them.
-            if (!$children.find('input:checked').length) {
-              $children.parents('.features-override-children-wrapper').hide();
-              
-              $parent_label.append(' <a class="features-override-show-children" href="#" title="' + Drupal.t('Select individual overrides') + '">' + Drupal.t('refine') + '</a>');
-              $('.features-override-show-children', $parent_label).click(function() {
-                $children.parents('.features-override-children-wrapper').show();
-                $(this).remove();
-                return false;
-              });
-            }
-            else {
-              $parent_checkbox.attr('disabled', 'disabled');
-              $parent_checkbox.removeAttr('checked');
-              if (!$parent_label.parent().find('.description').length) {
-                $parent_label.append('<span class="description"> - ' + Drupal.t('This cannot be picked while individual alters are selected.') + '</span>');
-              }
-            }
+
+        var $child_checkboxes = $('input[type=checkbox][name^="sources[features_override_overrides]"][value^=' + this.value + ']').each(function (i) {
+          if (Drupal.settings.features_override_links['sub'][this.value]) {
+            $($(this).parent()).find('label').append(' <a href="' + Drupal.settings.features_override_links['sub'][this.value] + '" target="_blank">' + Drupal.t('view') + '</a>');
           }
-          else {
-            $parent_checkbox.attr('disabled', 'disabled');
-            $parent_label.append('- <span class="description">' + Drupal.t('All alters of this component have been exported to other features.') + '</span>');
-          }
-        }
+        }).parents('div.form-type-checkbox');
+        $child_checkboxes.wrapAll('<div class="features-override-children-wrapper" id="' + this.id + '-wrapper"></div>');
+        var $wrapper = $child_checkboxes.parent();
+
+        // Prepend a label saying what these overrides are for.
+        $wrapper.before('<h4>' + Drupal.t('Individual overrides for :') + $parent_label.text() + '</h4>');
+        var fotext = Drupal.t('Full overrides already exported for this item to this feature.')
+          + ' '
+          + '<a href="#" id="' + this.id + '-refine">' + Drupal.t('Refine') + '</a>';
+        $wrapper.after('<div class="features-override-children-warning" id="' + this.id + '-warning">' + fotext + '</div>');
+
+        // Unchecks the items component to allow indivudal refinment if desired.
+        $('#' + this.id + '-refine').bind('click', {id : this.id}, function(event) {
+          $('#' + event.data.id).removeAttr('checked').trigger('change');
+          return false;
+        });
+
+        // Disable child checkboxes when parent is selected
+        $parent_checkbox.change(function() {
+          features_override_switch_child_info(this.id, this.checked);
+        });
+        features_override_switch_child_info(this.id, this.checked);
       });
     }
   }
-
-
+  function features_override_switch_child_info(id, is_checked) {
+    if (is_checked) {
+      // Jquery bug that hide() doesn't always work when parent hidden.
+      $('#' + id + '-wrapper').css('display', 'none');
+      $('#' + id + '-warning').css('display', 'block');
+    }
+    else {
+      $('#' + id + '-wrapper').show();
+      $('#' + id + '-warning').css('display', 'none');
+    }
+  }
 })(jQuery);

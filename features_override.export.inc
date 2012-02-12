@@ -63,7 +63,7 @@ function features_override_get_overrides($component_key = FALSE, $element_key = 
 
     features_include();
     foreach (features_get_components() as $component => $info) {
-      if (empty($info['default_hook']) || $component == 'features_override' || !features_get_default_alter_hook($component) | !features_hook($component, 'features_export_render')) {
+      if (empty($info['default_hook']) || $component == 'features_override_items' || $component == 'features_override_overrides' || !features_get_default_alter_hook($component) | !features_hook($component, 'features_export_render')) {
         continue;
       }
 
@@ -425,4 +425,68 @@ function features_override_var_export($var, $prefix = '') {
   }
 
   return $output;
+}
+
+/**
+ * Renders the addition/change to an element.
+ */
+function features_override_features_export_render_addition($alter, $element, $component) {
+  module_load_include('hooks.inc', 'features_override');
+  if (features_hook($component, 'features_override_export_render_addition')) {
+    return features_invoke($component, 'features_override_export_render_addition', $alter, $element);
+  }
+  else {
+    $code = array();
+    $component_start = "\$data['$element']";
+    $code_line = features_override_export_keys($alter['keys']);
+    $test_line = features_override_export_keys(array_slice($alter['keys'], 0, count($alter['keys']) - 1));
+    $value_export = features_override_var_export($alter['value'], '    ');
+    $code[] = '';
+    $code[] = "  if (isset(" . $component_start . $test_line . ")) {";
+    $code[] = "    " . $component_start . $code_line . ' = ' . $value_export . ';';
+    $code[] = "  }";
+    return $code;
+  }
+}
+
+/**
+ * Renders the deletion to an element.
+ */
+function features_override_features_export_render_deletion($alter, $element, $component) {
+  module_load_include('hooks.inc', 'features_override');
+  if (features_hook($component, 'features_override_export_render_deletion')) {
+    return features_invoke($component, 'features_override_export_render_deletion', $alter, $element);
+  }
+  else {
+    $code = array();
+    $component_start = "\$data['$element']";
+    $code_line = features_override_export_keys($alter['keys']);
+    $test_line = features_override_export_keys(array_slice($alter['keys'], 0, count($alter['keys']) - 1));
+    $code[] = '';
+    $code[] = "  if (isset(" . $component_start . $test_line . ")) {";
+    $code[] =  '    unset(' . $component_start . $code_line . ');';
+    $code[] = "  }";
+    return $code;
+  }
+}
+
+/**
+ * Encodes a string for use as option.
+ 
+ * @see features_dom_encode_options()
+ * @param $string
+ *   A string to encode.
+ * @return
+ *   An encoded string for use as option value.
+ */
+function features_override_encode_string($string) {
+  $replacements = array(
+    ':' => '__'. ord(':') .'__',
+    '/' => '__'. ord('/') .'__',
+    ',' => '__'. ord(',') .'__',
+    '.' => '__'. ord('.') .'__',
+    '<' => '__'. ord('<') .'__',
+    '>' => '__'. ord('>') .'__',
+  );
+  return strtr($string, $replacements);
 }
