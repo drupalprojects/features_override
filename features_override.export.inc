@@ -405,10 +405,13 @@ function features_override_var_export($var, $prefix = '') {
       elseif (get_class($var) === 'stdClass') {
         $output = '(object) ' . features_override_var_export((array) $var, $prefix);
       }
+      elseif (!method_exists($var, '__set_state')) {
+        // Ugly, but custom object with no clue how to export.without
+        // __set_state class and var_export produces unusable code.
+        $output = 'unserialize(' . var_export(serialize($var), TRUE) . ')';
+      }
       else {
-        // Ugly, but custom object with no clue how to export.
-        // var_export produces unusable code in this case.
-        $output = 'unserialize(' . var_export(serialize($var), true) . ')';
+        $output = var_export($var, TRUE);
       }
     }
   }
