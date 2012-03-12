@@ -205,7 +205,7 @@ function _features_override_set_additions($default, $normal, &$additions, $ignor
       continue;
     }
     if ($object) {
-      if (!property_exists($default, $key) || (is_scalar($value) && ($default->$key !== $value))) {
+      if (!is_object($default) || !property_exists($default, $key) || (is_scalar($value) && ($default->$key !== $value))) {
         $_keys = array_merge($keys, array(array('type' => 'object', 'key' => $key)));
         $additions[features_override_make_key($_keys)] = array(
           'keys' => $_keys,
@@ -217,7 +217,7 @@ function _features_override_set_additions($default, $normal, &$additions, $ignor
       }
     }
     elseif (is_array($normal)) {
-      if (!array_key_exists($key, $default) || (is_scalar($value) && ($default[$key] !== $value))) {
+      if (!is_array($default) || !array_key_exists($key, $default) || (is_scalar($value) && ($default[$key] !== $value))) {
         $_keys = array_merge($keys, array(array('type' => 'array', 'key' => $key)));
         $additions[features_override_make_key($_keys)] = array(
           'keys' => $_keys,

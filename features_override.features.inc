@@ -153,11 +153,9 @@ function features_override_items_features_export_render($module, $data, $export 
 function features_override_overrides_features_export_render($module, $data, $export = NULL) {
   $list = $overrides_to_export = array();
 
-
   // Go through all data collecting the items exports to create.
   $features_override_code = array(
-    '  // This code is only used for in features. Exported alters hooks do ',
-    '  // the magic.',
+    '  // This code is only used for in features. Exported alters hooks do the magic.',
     '  $overrides = array();',
   );
   foreach ($data as $identifier) {
@@ -213,6 +211,7 @@ function features_override_overrides_features_export_render($module, $data, $exp
     $list[features_get_default_alter_hook($component) . '_alter'] = array(
       'code' => implode("\n", $code),
       'args' => '&$data',
+      'file' => 'features',
     );
   }
 

@@ -18,14 +18,14 @@ function features_override_features_api() {
     'features_override_items' => array(
       'name' => t('Feature Overrides group overrides'),
       'default_hook' => 'features_override_default_items',
-      'default_file' => FEATURES_DEFAULTS_INCLUDED_COMMON,
+      'default_file' => FEATURES_DEFAULTS_INCLUDED,
       'feature_source' => TRUE,
       'file' => $path,
     ),
     'features_override_overrides' => array(
       'name' => t('Feature Overrides overrides (individual -- advanced)'),
       'default_hook' => 'features_override_default_overrides',
-      'default_file' => FEATURES_DEFAULTS_INCLUDED_COMMON,
+      'default_file' => FEATURES_DEFAULTS_INCLUDED,
       'feature_source' => TRUE,
       'file' => $path,
     ),
