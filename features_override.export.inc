@@ -47,6 +47,19 @@ function features_override_make_key($keys) {
 }
 
 /**
+ * Returns an array of keys to be ignored for various exportables
+ * @param $component
+ *   The component to retrieve ignore_keys from.
+ */
+function features_get_ignore_keys($component) {
+  static $cache;
+  if (!isset($cache[$component])) {
+    $cache[$component] = module_invoke_all('features_override_ignore', $component);
+  }
+  return $cache[$component];
+}
+
+/**
  * Calculautes what overrides exist for by component/element.
  *
  * @param $component_key
@@ -55,21 +68,23 @@ function features_override_make_key($keys) {
  *   A key identifieing an element that's been overriden.
  * @param $reset
  *   Reset the internal cache of overrides gathered.
- */
-function features_override_get_overrides($component_key = FALSE, $element_key = FALSE, $reset = FALSE) {
+ * @param $all
+ *   If TRUE, return all overrides, otherwise only overrides not yet in an override feature
+ *  */
+function features_override_get_overrides($component_key = FALSE, $element_key = FALSE, $reset = FALSE, $all = TRUE) {
   static $cache;
   if (!isset($cache) || $reset) {
     $cache = array();
-
+    module_load_include('inc', 'features', 'features.export');
     features_include();
     foreach (features_get_components() as $component => $info) {
-      if (empty($info['default_hook']) || $component == 'features_override_items' || $component == 'features_override_overrides' || !features_get_default_alter_hook($component) | !features_hook($component, 'features_export_render')) {
+      if (empty($info['default_hook']) || $component == 'features_override_items' || $component == 'features_overrides' || !features_get_default_alter_hook($component) | !features_hook($component, 'features_export_render')) {
         continue;
       }
 
       features_include_defaults($component);
       foreach (module_implements($info['default_hook']) as $module) {
-        if ($differences = array_filter(features_override_module_component_overrides($module, $component, $reset))) {
+        if ($differences = array_filter(features_override_module_component_overrides($module, $component, $reset, $all))) {
           $cache[$component] = isset($cache[$component]) ? array_merge($differences, $cache[$component]) : $differences;
         }
       }
@@ -96,23 +111,35 @@ function features_override_get_overrides($component_key = FALSE, $element_key = 
  *   A type of component to find overrides for.
  * @param $reset
  *   Reset the internal cache of overrides gathered.
+ * @param $all
+ *   If TRUE, return all overrides, otherwise only overrides not yet in an override feature
  * @return
  *   An array of overrides found.
  */
-function features_override_module_component_overrides($module, $component, $reset = FALSE) {
+function features_override_module_component_overrides($module, $component, $reset = FALSE, $all = TRUE) {
   static $cache = array();
 
-  if (isset($cache[$module][$component])) {
+  if (isset($cache[$module][$component])  && !$reset) {
     return $cache[$module][$component];
   }
-  module_load_include('hooks.inc', 'features_override');
+  module_load_include('inc', 'features_override', 'features_override.hooks');
   features_include();
   features_include_defaults($component);
 
   // Allows overriding non-feature controlled code.
   $default_hook = features_get_default_hooks($component);
-  $default = module_invoke($module, $default_hook);
-  $normal = features_get_normal($component, $module);
+  if ($all) {
+    // call hooks directly
+    // could also do
+    // $default = features_get_default($component, $module, FALSE, $reset);
+    // but this is more efficient
+    $default = module_invoke($module, $default_hook);
+  }
+  else {
+    $default = features_get_default($component, $module, TRUE, $reset);
+  }
+  $normal = features_get_normal($component, $module, $reset);
+
   // This indicates it is likely not controlled by features, so fetch manually.
   if (!$normal) {
     $code = array_pop(features_invoke($component, 'features_export_render', $module, array_keys($default), NULL));
@@ -124,29 +151,40 @@ function features_override_module_component_overrides($module, $component, $rese
     }
   }
 
-  // Can't use _features_sanitize as that resets some keys.
-  _features_override_sanitize($normal);
-  _features_override_sanitize($default);
-
   $context = array(
     'component' => $component,
     'module' => $module,
   );
 
+  // Can't use _features_sanitize as that resets some keys.
+  _features_override_sanitize($normal);
+  _features_override_sanitize($default);
+  // make a deep copy of data to prevent problems when removing recursion later
+  $default_copy = unserialize(serialize($default)); 
+  $normal_copy = unserialize(serialize($normal)); 
+
+  $ignore_keys = features_get_ignore_keys($component);
+  // remove keys to be ignored
+  // doing this now allows us to better control which recursive parts are removed
+  if (count($ignore_keys)) {
+    _features_override_remove_ignores($default_copy, $ignore_keys);
+    _features_override_remove_ignores($normal_copy, $ignore_keys);
+  }
+  // now remove any remaining recursion
+  features_override_remove_recursion($default_copy);
+  features_override_remove_recursion($normal_copy);
+
   $component_overrides = array();
-  $ignore_keys = module_invoke_all('features_override_ignore', $component);
   if ($normal && is_array($normal) || is_object($normal)) {
     foreach ($normal as $name => $properties) {
       $component_overrides[$name] = array(
         'additions' => array(),
         'deletions' => array(),
       );
-      if (isset($default[$name])) {
-        features_override_remove_recursion($default[$name]);
-        features_override_remove_recursion($properties);
-        drupal_alter('features_override_component_overrides', $default[$name], $properties, $context);
-        _features_override_set_additions($default[$name], $properties, $component_overrides[$name]['additions'], $ignore_keys);
-        _features_override_set_deletions($default[$name], $properties, $component_overrides[$name]['deletions'], $ignore_keys);
+      if (isset($default_copy[$name])) {
+        drupal_alter('features_override_component_overrides', $default[$name], $normal_copy[$name], $context);
+        _features_override_set_additions($default_copy[$name], $normal_copy[$name], $component_overrides[$name]['additions'], $ignore_keys);
+        _features_override_set_deletions($default_copy[$name], $normal_copy[$name], $component_overrides[$name]['deletions'], $ignore_keys);
       }
       if (!array_filter($component_overrides[$name])) {
         $component_overrides[$name] = FALSE;
@@ -197,7 +235,7 @@ function _features_override_sanitize(&$array) {
  * @param $keys
  *   The keys for this level.
  */
-function _features_override_set_additions($default, $normal, &$additions, $ignore_keys = array(), $level = 0, $keys = array()) {
+function _features_override_set_additions(&$default, &$normal, &$additions, $ignore_keys = array(), $level = 0, $keys = array()) {
   $object = is_object($normal);
 
   foreach ($normal as $key => $value) {
@@ -210,6 +248,7 @@ function _features_override_set_additions($default, $normal, &$additions, $ignor
         $additions[features_override_make_key($_keys)] = array(
           'keys' => $_keys,
           'value' => $value,
+          'original' => (is_scalar($value) && isset($default->$key)) ? $default->key : '',
         );
       }
       elseif (property_exists($default, $key) && ($default->$key !== $value)) {
@@ -222,6 +261,7 @@ function _features_override_set_additions($default, $normal, &$additions, $ignor
         $additions[features_override_make_key($_keys)] = array(
           'keys' => $_keys,
           'value' => $value,
+          'original' => (is_scalar($value) && isset($default[$key])) ? $default[$key] : '',
         );
       }
       elseif (array_key_exists($key, $default) && (!is_null($value) && ($default[$key] !== $value))) {
@@ -247,7 +287,7 @@ function _features_override_set_additions($default, $normal, &$additions, $ignor
  * @param $keys
  *   The keys for this level.
  */
-function _features_override_set_deletions($default, $normal, &$deletions, $ignore_keys = array(), $level = 0, $keys = array()) {
+function _features_override_set_deletions(&$default, &$normal, &$deletions, $ignore_keys = array(), $level = 0, $keys = array()) {
   $object = is_object($default);
 
   foreach ($default as $key => $value) {
@@ -305,39 +345,38 @@ function features_override_export_keys($keys) {
 /**
  * Removes recursion from an object or array.
  *
- * @param $test
+ * @param $item
  *   An object or array passed by reference.
  */
-function features_override_remove_recursion(&$test) {
-  _features_override_remove_recursion($test);
-  _features_override_remove_recursion_markers($test);
-  
+function features_override_remove_recursion(&$item) {
+  _features_override_remove_recursion($item);
+  _features_override_remove_recursion_markers($item);  
 }
 
 
 /**
  * Helper to removes recursion from an object/array.
  *
- * @param $test
+ * @param $item
  *   An object or array passed by reference.
  */
-function _features_override_remove_recursion(&$test) {
-  $is_object = is_object($test);
+function _features_override_remove_recursion(&$item) {
+  $is_object = is_object($item);
   if ($is_object) {
-    $test->{FEATURES_OVERRIDE_RECURSION_MARKER} = 1;
+    $item->{FEATURES_OVERRIDE_RECURSION_MARKER} = 1;
   }
   else {
-    $test[FEATURES_OVERRIDE_RECURSION_MARKER] = 1;
+    $item[FEATURES_OVERRIDE_RECURSION_MARKER] = 1;
   }
-  foreach ($test as $key => $value) {
+  foreach ($item as $key => $value) {
     if (is_array($value) || is_object($value)) {
       $remove = is_array($value) ? !empty($value[FEATURES_OVERRIDE_RECURSION_MARKER]) : !empty($value->{FEATURES_OVERRIDE_RECURSION_MARKER});
       if ($remove) {
         if ($is_object) {
-          unset($test->$key);
+          unset($item->$key);
         }
         else {
-          unset($test[$key]);
+          unset($item[$key]);
         }
       }
       else {
@@ -350,22 +389,50 @@ function _features_override_remove_recursion(&$test) {
 /**
  * Helper to removes recursion from an object/array.
  *
- * @param $test
+ * @param $item
  *   An object or array passed by reference.
  */
-function _features_override_remove_recursion_markers(&$test) {
-  $is_object = is_object($test);
-  foreach ($test as $key => $value) {
+function _features_override_remove_recursion_markers(&$item) {
+  $is_object = is_object($item);
+  foreach ($item as $key => $value) {
     if ($key === FEATURES_OVERRIDE_RECURSION_MARKER) {
       if ($is_object) {
-        unset($test->$key);
+        unset($item->$key);
       }
       else {
-        unset($test[$key]);
+        unset($item[$key]);
       }
     }
     elseif (is_array($value) || is_object($value)) {
       _features_override_remove_recursion_markers($value);
+    }
+  }
+}
+
+/**
+ * Helper to removes a set of keys an object/array.
+ *
+ * @param $item
+ *   An object or array passed by reference.
+ * @param $ignore_keys
+ *   Array of keys to be ignored. Values are the level of the key. 
+ * @param $level
+ *   Level of key to remove.  Up to 2 levels deep because $item can still be 
+ *   recursive
+ */
+function _features_override_remove_ignores(&$item, $ignore_keys, $level = -1) {
+  $is_object = is_object($item);
+  foreach ($item as $key => $value) {
+    if (isset($ignore_keys[$key]) && ($ignore_keys[$key] == $level)) {
+      if ($is_object) {
+        unset($item->$key);
+      }
+      else {
+        unset($item[$key]);
+      }
+    }
+    elseif (($level < 2) && (is_array($value) || is_object($value))) {
+      _features_override_remove_ignores($value, $ignore_keys, $level+1);
     }
   }
 }
@@ -416,7 +483,7 @@ function features_override_var_export($var, $prefix = '') {
     }
   }
   else {
-    module_load_include('export.inc', 'features');
+    module_load_include('inc', 'features', 'features.export');
     $output = features_var_export($var);
   }
 
@@ -431,7 +498,7 @@ function features_override_var_export($var, $prefix = '') {
  * Renders the addition/change to an element.
  */
 function features_override_features_export_render_addition($alter, $element, $component) {
-  module_load_include('hooks.inc', 'features_override');
+  module_load_include('inc', 'features_override', 'features_override.hooks');
   if (features_hook($component, 'features_override_export_render_addition')) {
     return features_invoke($component, 'features_override_export_render_addition', $alter, $element);
   }
@@ -439,12 +506,9 @@ function features_override_features_export_render_addition($alter, $element, $co
     $code = array();
     $component_start = "\$data['$element']";
     $code_line = features_override_export_keys($alter['keys']);
-    $test_line = features_override_export_keys(array_slice($alter['keys'], 0, count($alter['keys']) - 1));
     $value_export = features_override_var_export($alter['value'], '    ');
-    $code[] = '';
-    $code[] = "  if (isset(" . $component_start . $test_line . ")) {";
-    $code[] = "    " . $component_start . $code_line . ' = ' . $value_export . ';';
-    $code[] = "  }";
+    $original_export = (isset($alter['original'])) ? ' // WAS: ' . features_override_var_export($alter['original'], '    ') : '';
+    $code[] = "    " . $component_start . $code_line . ' = ' . $value_export . ';' . $original_export;
     return $code;
   }
 }
@@ -453,7 +517,7 @@ function features_override_features_export_render_addition($alter, $element, $co
  * Renders the deletion to an element.
  */
 function features_override_features_export_render_deletion($alter, $element, $component) {
-  module_load_include('hooks.inc', 'features_override');
+  module_load_include('inc', 'features_override', 'features_override.hooks');
   if (features_hook($component, 'features_override_export_render_deletion')) {
     return features_invoke($component, 'features_override_export_render_deletion', $alter, $element);
   }
@@ -461,11 +525,7 @@ function features_override_features_export_render_deletion($alter, $element, $co
     $code = array();
     $component_start = "\$data['$element']";
     $code_line = features_override_export_keys($alter['keys']);
-    $test_line = features_override_export_keys(array_slice($alter['keys'], 0, count($alter['keys']) - 1));
-    $code[] = '';
-    $code[] = "  if (isset(" . $component_start . $test_line . ")) {";
     $code[] =  '    unset(' . $component_start . $code_line . ');';
-    $code[] = "  }";
     return $code;
   }
 }

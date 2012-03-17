@@ -5,7 +5,7 @@
  * Page callback for features override pages.
  */
 
-module_load_include('export.inc', 'features_override');
+module_load_include('inc', 'features_override', 'features_override.export');
 
 /**
  * Implements hook_features_export_options().
@@ -24,23 +24,24 @@ function features_override_items_features_export_options() {
 /**
  * Implements hook_features_export_options().
  */
-function features_override_overrides_features_export_options() {
+function features_overrides_features_export_options() {
   $options = $sub_links = $main_links = array();
   drupal_add_js(drupal_get_path('module', 'features_override') . '/features_override_form.js');
+  drupal_add_css(drupal_get_path('module', 'features_override') . '/features_override.css');
 
   $overrides = features_override_get_overrides();
   foreach ($overrides as $component => $elements) {
     foreach ($elements as $key => $element) {
       $identifier = "{$component}.{$key}";
       $identifier_spaced = "{$component} {$key} ";
-      $main_links[features_override_encode_string($identifier)] = url('admin/structure/features/override/' . $component . '/' . $key);
+      $main_links[features_override_encode_string($identifier)] = url('admin/structure/features/features_override/' . $component . '/' . $key);
       foreach ($element['additions'] as $change_key => $changes) {
         $options[$identifier . '.' . $change_key] = $identifier_spaced . ' addition: of ' . features_override_export_keys($changes['keys']);
-        $sub_links[features_override_encode_string($identifier . '.' . $change_key)] = url('admin/structure/features/override/' . $component . '/' . $key, array('query' => array('key' => $change_key)));
+        $sub_links[features_override_encode_string($identifier . '.' . $change_key)] = url('admin/structure/features/features_override/' . $component . '/' . $key, array('query' => array('key' => $change_key)));
       }
       foreach ($element['deletions'] as $change_key => $changes) {
         $options[$identifier . '.' . $change_key] = $identifier_spaced . ' deletion of ' . features_override_export_keys($changes['keys']);
-        $sub_links[features_override_encode_string($identifier . '.' . $change_key)] = url('admin/structure/features/override/' . $component . '/' . $key, array('query' => array('key' => $change_key)));
+        $sub_links[features_override_encode_string($identifier . '.' . $change_key)] = url('admin/structure/features/features_override/' . $component . '/' . $key, array('query' => array('key' => $change_key)));
       }
     }
   }
@@ -53,12 +54,12 @@ function features_override_overrides_features_export_options() {
  * Implements hook_features_export().
  */
 function features_override_items_features_export($data, &$export, $module_name = '') {
-  $pipe = array('features_override_overrides' => array());
+  $pipe = array('features_overrides' => array());
   $map = features_get_default_map('features_override_items');
-  $map_overrides = features_get_default_map('features_override_overrides');
+  $map_overrides = features_get_default_map('features_overrides');
   static $options;
   if (!isset($options)) {
-    $options = features_override_overrides_features_export_options();
+    $options = features_overrides_features_export_options();
   }
 
   foreach ($data as $identifier) {
@@ -80,7 +81,7 @@ function features_override_items_features_export($data, &$export, $module_name =
       foreach ($options as $option_key => $option_name) {
         list($options_component, $options_element, $options_keys) = features_override_parse_identifier($option_key);
         if ($options_element == $element && empty($map_overrides[$option_key])) {
-          $pipe['features_override_overrides'][] = $option_key;
+          $pipe['features_overrides'][] = $option_key;
         }
       }
 
@@ -98,24 +99,24 @@ function features_override_items_features_export($data, &$export, $module_name =
 /**
  * Implements hook_features_export().
  */
-function features_override_overrides_features_export($data, &$export, $module_name = '') {
-  $pipe = array('features_override_overrides' => array());
-  $map = features_get_default_map('features_override_overrides');
+function features_overrides_features_export($data, &$export, $module_name = '') {
+  $pipe = array('features_overrides' => array());
+  $map = features_get_default_map('features_overrides');
   static $options;
 
   foreach ($data as $identifier) {
     // If this override bundle is already provided by another module, remove the field
     // and add the other module as a dependency.
     if (isset($map[$identifier]) && $map[$identifier] != $module_name) {
-      if (isset($export['features']['features_override_overrides'][$identifier])) {
-        unset($export['features']['features_override_overrides'][$identifier]);
+      if (isset($export['features']['features_overrides'][$identifier])) {
+        unset($export['features']['features_overrides'][$identifier]);
       }
       $module = $map[$identifier];
       $export['dependencies'][$module] = $module;
     }
     // If the field has not yet been exported, add it
     else {
-      $export['features']['features_override_overrides'][$identifier] = $identifier;
+      $export['features']['features_overrides'][$identifier] = $identifier;
     }
   }
   return $pipe;
@@ -125,9 +126,10 @@ function features_override_overrides_features_export($data, &$export, $module_na
  * Implements hook_features_export_render().
  */
 function features_override_items_features_export_render($module, $data, $export = NULL) {
+  // no code is needed for this exportable.  Details are stored via features_overrides_features_export_render
   $list = array();
 
-
+/*
   // Go through all data collecting the items exports to create.
   $features_override_code = array(
     '  // This code is only used to work nicely with features UI.',
@@ -143,21 +145,25 @@ function features_override_items_features_export_render($module, $data, $export 
   $features_override_code[] = '';
   $features_override_code[] = ' return $overrides;';
   $list['features_override_default_items'] = implode("\n", $features_override_code);
-
+ */
   return $list;
 }
 
 /**
  * Implements hook_features_export_render().
  */
-function features_override_overrides_features_export_render($module, $data, $export = NULL) {
+function features_overrides_features_export_render($module, $data, $export = NULL) {
+  // Remember, the code exported here is just for the Features UI to keep track
+  // of the overridden status.  All it needs to do is capture "changes".
+  // The actual form of the output doesn't really matter.
   $list = $overrides_to_export = array();
 
   // Go through all data collecting the items exports to create.
   $features_override_code = array(
-    '  // This code is only used for in features. Exported alters hooks do the magic.',
+    '  // This code is only used for UI in features. Exported alters hooks do the magic.',
     '  $overrides = array();',
   );
+  $last_component = '';
   foreach ($data as $identifier) {
     // Something is adding extra quote marks.
     list($component, $element, $keys) = features_override_parse_identifier($identifier);
@@ -179,9 +185,17 @@ function features_override_overrides_features_export_render($module, $data, $exp
         $features_override_value['deletions'][] = $overrides[$element]['deletions'][$keys];
       }
     }
-    $features_override_code[] = '';
-    $features_override_code[] = "  // Exported overrides for: $component $element";
-    $features_override_code[] = '  $overrides["' . $identifier . '"] = ' . features_override_var_export($features_override_value, '  ') . ';';
+    if ($component != $last_component) {
+      $features_override_code[] = '';
+      $features_override_code[] = "  // Exported overrides for: $component";
+    }
+    $last_component = $component;
+    if (count($features_override_value['additions'])) {
+      $features_override_code[] = '  $overrides["' . $identifier . '"] = ' . features_override_var_export($features_override_value['additions'][0]['value'], '  ') . ';';
+    }
+    else if (count($features_override_value['deletions'])) {
+      $features_override_code[] = '  $overrides["' . $identifier . '"]["DELETED"] = TRUE;';
+    }
   }
 
   // Create the default hook that defines all exported overrides.
@@ -193,16 +207,18 @@ function features_override_overrides_features_export_render($module, $data, $exp
   foreach ($overrides_to_export as $component => $elements) {
     foreach ($elements as $element => $overrides) {
       $component_code[$component] = isset($component_code[$component]) ? $component_code[$component] : array();
+      $component_code[$component][] = '  if (isset($data[' . var_export($element,TRUE) . '])) {';
       if (!empty($overrides['additions'])) {
         foreach ($overrides['additions'] as $alter) {
-          $component_code[$component] = array_merge(features_override_features_export_render_addition($alter, $element, $component), $component_code[$component]);
+          $component_code[$component][] = implode("\n", features_override_features_export_render_addition($alter, $element, $component));
         }
       }
       if (!empty($overrides['deletions'])) {
         foreach ($overrides['deletions'] as $alter) {
-          $component_code[$component] = array_merge(features_override_features_export_render_deletion($alter, $element, $component), $component_code[$component]);
+          $component_code[$component][] = implode("\n", features_override_features_export_render_deletion($alter, $element, $component));
         }
       }
+      $component_code[$component][] = '  }';
     }
   }
 
@@ -235,15 +251,15 @@ function features_override_items_features_rebuild($module) {
 /**
  * Implements hook_features_revert().
  */
-function features_override_overrides_features_revert($module) {
-  features_override_overrides_features_rebuild($module);
+function features_overrides_features_revert($module) {
+  features_overrides_features_rebuild($module);
 }
 
 /**
  * Implements of hook_features_rebuild().
  */
-function features_override_overrides_features_rebuild($module) {
-  _features_override_features_rebuild($module, 'features_override_overrides');
+function features_overrides_features_rebuild($module) {
+  _features_override_features_rebuild($module, 'features_overrides');
 }
 
 /**
@@ -271,5 +287,5 @@ function _features_override_features_rebuild($module, $component_key = 'features
   }
 
   // rebuild those parent components
-  features_rebuild($parents);
+  //features_rebuild($parents);
 }

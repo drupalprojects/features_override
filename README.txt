@@ -1,19 +1,18 @@
-Features Override (Drupal 7)
--------------------
+Features Override (Drupal 7-2.x)
+--------------------------------
 
 This module add a new Features exportable called "Feature Overrides" that 
-are used to export overridden changes to other Features.  It requires a patch 
-to the Features module (http://drupal.org/node/1317054).
+are used to export overridden changes to other Features.  It requires at
+least the 7.x-1.0-rc1 release of Features.
 
-To use, install the patch to Features and then install this module and enable
-it.  When you create a new feature from the Structure/Features page, a new
-exportable called "Feature Overrides" will be displayed in the drop-down list.
-Select this exportable and then select which components you wish to export
-overrides for.  Only components that are currently overridden will be shown
-as checkboxes.
-
-NOTE: The intent is for this module to become the new 7-2.x release for the
-Features Override module.  The sandbox version is for early alpha testing.
+To use, install this module and enable it.  When you create a new feature from 
+the Structure/Features page, two new exportables called "Feature Overrides" 
+will be displayed in the drop-down list.  The first one allows you to override
+all of the changes of a specific component.  The second "Individual Advanced"
+allows you to select exactly which line-by-line changes are exported.
+Select the Overrode exportable and then select which components you wish to 
+export  overrides for.  Only components that are currently overridden will be 
+shown as checkboxes.
 
 Maintainers
 -----------
@@ -22,28 +21,7 @@ Maintainers
 
 Basic Usage
 -----------
-1) Create normal features and enable them.  Note that the feature must be 
-recreated while the Features Override 2 module is enabled in order for the 
-proper alter hooks to be added to the exportable code.  If you have existing 
-features prior to installing Features Override 2, then you must rebuild them 
-(drush features-update featurename). If you cannot rebuild them, you can edit 
-the source code of the features *.inc file and find the line at the end that 
-returns the export, e.g.:
-
-  ...
-  return $fields;
-}
-
-and add this line to enable the override hooks:
-
-  ...
-  features_override_render('field', $fields);
-  return $fields;
-}
-
-where the first argument is the name of the Features component (field, 
-views_view, taxonomy, user_permissions, etc).  This can be found in the file 
-name.  The second argument is the variable that is being returned.
+1) Create normal features and enable them.  
 
 2) Make changes to the site using the normal Drupal UI.
 
@@ -52,7 +30,7 @@ Features marked as "Overridden"
 
 4) Click the "Create Feature" tab.
 
-5) Enter a name for your Override feature.  Enter a description.
+5) Enter a name for your Override feature.  
 
 6) Click the "Edit components" drop-down and select "Feature Overrides".  
 A list of overridden components will be shown.  For example, if you changed a 
@@ -168,21 +146,22 @@ the current configuration. Only code *differences* are stored in the Override
 feature.
 
 To view these specific line-by-line code differences, click the Default link 
-next to your Override module from the Features admin page, then click the new 
-Overrides tab.  This will show the Overrides currently exported as individual 
-lines with a checkbox next to each line.
+next to your Override module from the Features admin page, then click the  
+Review Overrides tab.  This will show the Overrides currently exported as 
+individual lines (along with the normal "diff" listing below).
 
-Any new overrides that haven't yet been captured into code will also be 
-displayed on this page.  If you want to add a specific line to your Override 
-feature simply check the box next to the line, then click the Download Feature
-button.  If you want to remove a specific line from your Override feature, 
-uncheck the box next to the line, then click the Download Feature button.
+To change which specific lines are exported, click the Recreate tab, then
+open the Components dropdown.  Select the "Features Overrides Individual" 
+(advanced) tab.  Then click the "Refine" link next to the component you want
+to adjust.  Each specific override line will be shown as a checkbox.  Simply
+check or uncheck the lines desired.  Then click the Download button to create
+a new version of your Override feature.
 
-In the main Features Admin page there is also a new Overrides tab.  This will 
-show a list of any new overrides no matter which module that relate to.  This 
-is a very useful debugging tool for determining where changes have been made 
-to your site.  The Overrides tab will tell you the exact Component being 
-overridden. The normal "Review Overrides" tab in Features only shows the raw 
-code "diffs" and sometimes cannot show the full context of the change.  The 
-new Overrides tab can show you exactly what the change is and where it is made
-(which View changed, which field changed, etc).
+In the main Features Admin page there is also a new Review Overrides tab.  
+This will show a list of any new overrides no matter which module that relate 
+to.  This is a very useful debugging tool for determining where changes have 
+been made to your site.  The Overrides tab will tell you the exact Component 
+being overridden. The normal "Review Overrides" tab in Features only shows the 
+raw code "diffs" and sometimes cannot show the full context of the change.  The 
+new Review Overrides tab can show you exactly what the change is and where it 
+is made (which View changed, which field changed, etc).
