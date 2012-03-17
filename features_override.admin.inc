@@ -2,167 +2,110 @@
 
 /**
  * @file
- *   Features Override forms
+ * Page callbacks features overrides admin pages.
  */
 
 /**
- * Form callback for features overrides form.
+ * Renders the differences for a component and element
  */
-function features_override_form($form, $form_state, $feature = NULL) {
+function features_override_render_differences($component = '', $element = '') {
+  module_load_include('inc', 'features_override', 'features_override.export');
   module_load_include('inc', 'features', 'features.export');
-  drupal_add_css(drupal_get_path('module', 'features') . '/features.css');
   drupal_add_css(drupal_get_path('module', 'features_override') . '/features_override.css');
-
-  $form = array();
-  $override_list = array();
-  if (isset($feature)) {
-    $form['#feature'] = $feature;
-    $form['name'] = array(
-      '#type' => 'markup',
-      '#markup' => $feature->info['name'],
-      '#prefix' => '<div class="features-components"><h3>',
-      '#suffix' => '</h3></div>',
-    );
-    $form['description'] = array(
-      '#type' => 'markup',
-      '#markup' => t('Features Override line details.  Select lines to export.'),
-      '#prefix' => '<h4>',
-      '#suffix' => '</h4>',
-    );
-    $override_list['New Overrides'] = features_override_convert(features_override_get_overrides($feature->name));
-    $override_list['Existing Overrides'] = features_override_get_existing_overrides($feature->name);
-    $default_value['New Overrides'] = FALSE;
-    $default_value['Existing Overrides'] = TRUE;
+  $differences = features_override_get_overrides($component, $element, TRUE, !empty($component));
+  if (!$differences || !count(array_filter($differences))) {
+    return t('No overrides were found.');    
   }
-  else {
-    $form['name'] = array(
-      '#type' => 'markup',
-      '#markup' => 'Overrides',
-      '#prefix' => '<div class="features-components"><h3>',
-      '#suffix' => '</h3></div>',
-    );
-    $override_list['New Overrides'] = features_override_convert( features_override_get_overrides());
-    $default_value['New Overrides'] = FALSE;
+  if (!empty($element)) {
+    $differences = array($element => $differences);
   }
-
-  foreach ($override_list as $type_name => $overrides) {
-    $form['sources'][$type_name]['header'] = array(
-      '#type' => 'markup',
-      '#markup' => $type_name,
-      '#prefix' => '<h4>',
-      '#suffix' => '</h4>',
-    );
-
-    foreach ($overrides as $component => $element) {
-      $form['sources'][$type_name][$component] = array(
-        '#type' => 'fieldset',
-        '#title' => check_plain($component),
-      );
-      foreach ($element as $key => $value) {
-        $code = array();
-        $options = array();
-        $default_values = array();
-        features_override_export_override($code, '', $value, NULL);
-        $i = 0;
-        foreach ($code as $line) {
-          $options[$key . '.' . $i] = $line;
-          if ($default_value[$type_name]) {
-            $default_values[] = $key . '.' . $i;
-          }
-          $form['#code'][$component][$key . '.' . $i] = "['{$component}']['{$key}']" . $line;
-          $i++;
+  if (!empty($component)) {
+    $differences = array($component => $differences);
+  }
+  $rows = array();
+  foreach ($differences as $component_name => $item) {
+    $code_change = array();
+    $code_add = array();
+    $code_delete = array();
+    foreach ($item as $element_name => $difference) {
+      $key = (isset($_GET['key'])) ? $_GET['key'] : '';
+      if (!empty($key)) {
+        if (!empty($difference['additions'][$key])) {
+          return '<pre>' . implode("\n", 
+            features_override_features_export_render_addition($difference['additions'][$key], $element_name, $component_name)) . 
+            '</pre>';
         }
-        $form['sources'][$type_name][$component][$key][$component] = array(
-          '#type' => 'checkboxes',
-          '#options' => features_dom_encode_options($options),
-          '#title' => check_plain($key),
-          '#default_value' => features_dom_encode_options($default_values, FALSE),
-        );
+        elseif (!empty($difference['deletions'][$key])) {
+          return '<pre>' . implode("\n", 
+            features_override_features_export_render_deletion($difference['deletions'][$key], $element_name, $component_name)) . 
+            '</pre>';
+        }
+        else {
+          return t('Unable to find referenced information.');
+        }
+      }
+      else {
+        if (!empty($difference['additions'])) {
+          foreach ($difference['additions'] as $alter) {
+            if (is_scalar($alter['value'])) {
+              $code_change[] = array('<pre>' . implode("\n", features_override_features_export_render_addition($alter, $element_name, $component_name)). '</pre>');
+            }
+            else {
+              $code_add[] = array('<pre>' . implode("\n", features_override_features_export_render_addition($alter, $element_name, $component_name)). '</pre>');
+            }
+          }
+        }
+        if (!empty($difference['deletions'])) {
+          foreach ($difference['deletions'] as $alter) {
+            $code_delete[] = array('<pre>' . implode("\n", features_override_features_export_render_deletion($alter, $element_name, $component_name)). '</pre>');
+          }
+        }
       }
     }
+    if (count($code_add) || count($code_delete) || count($code_change)) {
+      $rows[] = array(array('data' => $component_name, 'header' => TRUE));
+    }
+    if (count($code_change)) {
+      $rows[] = array('CHANGES');
+      $rows = array_merge($rows, $code_change);
+    }
+    if (count($code_add)) {
+      $rows[] = array('ADDITIONS');
+      $rows = array_merge($rows, $code_add);
+    }
+    if (count($code_delete)) {
+      $rows[] = array('DELETIONS');
+      $rows = array_merge($rows, $code_delete);
+    }
   }
-
-  if (count($overrides) == 0) {
-    $form['message'] = array(
-      '#type' => 'markup',
-      '#markup' => 'There is nothing overridden to display.',
-      '#prefix' => '<p>',
-      '#suffix' => '</p>',
-    );
-
-  }
-  if (isset($feature)) {
-    $form['buttons']['submit'] = array(
-      '#type' => 'submit',
-      '#value' => t('Download feature'),
-      '#weight' => 10,
-      '#submit' => array('features_override_export_submit'),
-    );
-  }
-  return $form;
+  return theme('table', array('rows' => $rows, 'attributes' => array('class' => 'features_override_table')));
 }
 
 /**
- * Submit handler for features_export_form_build().
+ * Page callback to display the differences between what's in code and
+ * what is in the db.
+ *
+ * @param $feature
+ *   A loaded feature object to display differences for.
+ * @param $component
+ *   Optional: specific component to display differences for. If excluded, all components are used.
+ *
+ * @return Themed display of what is different.
  */
-function features_override_export_submit($form, &$form_state) {
-  module_load_include('inc', 'features', 'features.export');
-  $feature = $form['#feature'];
-  $code = $form['#code'];
-  $module_name = $feature->name;
-  $export = $form_state['values'];
-  $version = isset($feature->info['version']) ? $feature->info['version'] : '';
-
-  $data = array();
-  foreach ($export as $component => $element) {
-    if (isset($code[$component])) {
-      $element = features_dom_decode_options($element);
-      foreach ($element as $key => $value) {
-        if ($value) {
-          $data[] = '*.' . $code[$component][$key];
-        }
-      }
-    }
+function features_override_feature_diff($feature, $component = NULL) {
+  if (module_exists('diff')) {
+    module_load_include('inc', 'features', 'features.admin');
+    $output = features_feature_diff($feature, $component);
+    $output['diff'] = array(
+      '#prefix' => '<h2>',
+      '#markup' => 'Code diff',
+      '#suffix' => '</h2>',
+      '#weight' => -98,
+      );
   }
-  // Generate download
-  $export['features']['features_override'] = $data;
-  if ($files = features_export_render($export, $module_name, TRUE)) {
-    $filename = (!empty($version) ? "{$module_name}-{$version}" : $module_name) . '.tar';
-
-    // Clear out output buffer to remove any garbage from tar output.
-    if (ob_get_level()) {
-      ob_end_clean();
-    }
-
-    drupal_add_http_header('Content-type', 'application/x-tar');
-    drupal_add_http_header('Content-Disposition', 'attachment; filename="' . $filename . '"');
-    drupal_send_headers();
-
-    $tar = array();
-    $filenames = array();
-    foreach ($files as $extension => $file_contents) {
-      if (!in_array($extension, array('module', 'info'))) {
-        $extension .= '.inc';
-      }
-      $filenames[] = "{$module_name}.$extension";
-      print features_tar_create("{$module_name}/{$module_name}.$extension", $file_contents);
-    }
-    if (features_get_modules($module_name, TRUE)) {
-      $module_path = drupal_get_path('module', $module_name);
-      // file_scan_directory() can throw warnings when using PHP 5.3, messing
-      // up the output of our file stream. Suppress errors in this one case in
-      // order to produce valid output.
-      foreach (@file_scan_directory($module_path, '/.*/') as $file) {
-        $filename = drupal_substr($file->uri, drupal_strlen($module_path) + 1);
-        if (!in_array($filename, $filenames)) {
-          // Add this file.
-          $contents = file_get_contents($file->uri);
-          print features_tar_create("{$module_name}/{$filename}", $contents);
-          unset($contents);
-        }
-      }
-    }
-    print pack("a1024", "");
-    exit;
-  }
+  $output['overrides'] = array(
+    '#markup' => features_override_render_differences(),
+    '#weight' => -99,
+    );
+  return $output;
 }
