@@ -1,9 +1,10 @@
-Features Override (Drupal 7-2.x)
+Features Override (Drupal 6-2.x)
 --------------------------------
 
 This module add a new Features exportable called "Feature Overrides" that 
-are used to export overridden changes to other Features.  It requires at
-least the 7.x-1.0-rc1 release of Features.
+are used to export overridden changes to other Features.  
+
+The 6-2.x branch may require further backporting of recent Features 7.x changes.
 
 To use, install this module and enable it.  When you create a new feature from 
 the Structure/Features page, two new exportables called "Feature Overrides" 
@@ -13,11 +14,6 @@ allows you to select exactly which line-by-line changes are exported.
 Select the Overrode exportable and then select which components you wish to 
 export  overrides for.  Only components that are currently overridden will be 
 shown as checkboxes.
-
-Maintainers
------------
-- mpotter (Mike Potter)
-
 
 Basic Usage
 -----------

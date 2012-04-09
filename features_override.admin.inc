@@ -78,7 +78,7 @@ function features_override_render_differences($component = '', $element = '') {
       $rows = array_merge($rows, $code_delete);
     }
   }
-  return theme('table', array('rows' => $rows, 'attributes' => array('class' => 'features_override_table')));
+  return theme('table', array(), $rows, array('class' => 'features_override_table'));
 }
 
 /**

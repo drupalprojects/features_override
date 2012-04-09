@@ -1,6 +1,5 @@
 (function ($) {
-  Drupal.behaviors.features_override_form = {
-    attach: function(context, settings) {
+  Drupal.behaviors.features_override_form = function(context) {
       $('#edit-sources-features-overrides:not(.features-override-processed)', context)
         .prepend(Drupal.t('Advanced usage only. Allows you to select individual changes only to export.'))
         .addClass('features-override-processed');
@@ -41,7 +40,6 @@
         });
         features_override_switch_child_info(this.id, this.checked);
       });
-    }
   }
   function features_override_switch_child_info(id, is_checked) {
     if (is_checked) {

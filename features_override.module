@@ -38,7 +38,7 @@ function features_override_features_api() {
 function features_override_menu() {
   $items = array();
 
-  $items['admin/structure/features/features_override'] = array(
+  $items['admin/build/features/features_override'] = array(
     'title' => 'Review Overrides',
     'description' => 'Show override details for a component and element.',
     'page callback' => 'features_override_render_differences',
@@ -58,7 +58,7 @@ function features_override_menu() {
 function features_override_menu_alter(&$items) {
   // override the existing "Review Overrides" tab
   // do it here instead of hook_menu to ensure we run after features
-  $items['admin/structure/features/%feature/diff'] = array(
+  $items['admin/build/features/%feature/diff'] = array(
     'title' => 'Review overrides',
     'description' => 'Compare default and current feature.',
     'page callback' => 'features_override_feature_diff',
@@ -87,19 +87,6 @@ function features_override_features_override_ignore($component) {
       // Views automatically adds these two on export to set values.
       $ignores['api_version'] = 0;
       $ignores['disabled'] = 0;
-      break;
-    case 'image':
-      $ignores['module'] = 0;
-      $ignores['name'] = 0;
-      $ignores['storage'] = 0;
-      // Various properities are loaded into the effect in image_styles.
-      $ignores['summary theme'] = 2;
-      $ignores['module'] = 2;
-      $ignores['label'] = 2;
-      $ignores['help'] = 2;
-      $ignores['form callback'] = 2;
-      $ignores['effect callback'] = 2;
-      $ignores['dimensions callback'] = 2;
       break;
   }
   return $ignores;
