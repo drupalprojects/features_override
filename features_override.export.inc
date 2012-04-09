@@ -248,7 +248,7 @@ function _features_override_set_additions(&$default, &$normal, &$additions, $ign
         $additions[features_override_make_key($_keys)] = array(
           'keys' => $_keys,
           'value' => $value,
-          'original' => (is_scalar($value) && isset($default->$key)) ? $default->key : '',
+          'original' => (is_scalar($value) && isset($default->$key)) ? $default->$key : '',
         );
       }
       elseif (property_exists($default, $key) && ($default->$key !== $value)) {
