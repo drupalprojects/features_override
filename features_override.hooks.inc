@@ -21,13 +21,15 @@ function image_features_override_component_overrides_alter(&$default, &$normal, 
  */
 function image_features_override_export_render_addition($alter, $element) {
   $code = array();
-  $component_start = "\$data['$element']";
-  $code_line = features_override_export_keys($alter['keys']);
-  $value_export = features_override_var_export($alter['value'], '    ');
-  $code[] = "";
-  $code[] = "  if (" . $component_start . "['storage'] == IMAGE_STORAGE_DEFAULT) {";
-  $code[] = "    " . $component_start . $code_line . ' = ' . $value_export . ';';
-  $code[] = "  }";
+  if (isset($alter['keys']) && isset($alter['value'])) {
+    $component_start = "\$data['$element']";
+    $code_line = features_override_export_keys($alter['keys']);
+    $value_export = features_override_var_export($alter['value'], '    ');
+    $code[] = "";
+    $code[] = "  if (" . $component_start . "['storage'] == IMAGE_STORAGE_DEFAULT) {";
+    $code[] = "    " . $component_start . $code_line . ' = ' . $value_export . ';';
+    $code[] = "  }";
+  }
   return $code;
 }
 
@@ -36,12 +38,14 @@ function image_features_override_export_render_addition($alter, $element) {
  */
 function image_features_override_export_render_deletion($alter, $element) {
   $code = array();
-  $component_start = "\$data['$element']";
-  $code_line = features_override_export_keys($alter['keys']);
-  $value_export = features_override_var_export($alter['value'], '    ');
-  $code[] = "";
-  $code[] = "  if (" . $component_start . "['storage'] == IMAGE_STORAGE_DEFAULT) {";
-  $code[] =  '    unset(' . $component_start . $code_line . ');';
-  $code[] = "  }";
+  if (isset($alter['keys']) && isset($alter['value'])) {
+    $component_start = "\$data['$element']";
+    $code_line = features_override_export_keys($alter['keys']);
+    $value_export = features_override_var_export($alter['value'], '    ');
+    $code[] = "";
+    $code[] = "  if (" . $component_start . "['storage'] == IMAGE_STORAGE_DEFAULT) {";
+    $code[] =  '    unset(' . $component_start . $code_line . ');';
+    $code[] = "  }";
+  }
   return $code;
 }
