@@ -31,13 +31,13 @@ function features_override_render_differences($component = '', $element = '') {
       $key = (isset($_GET['key'])) ? $_GET['key'] : '';
       if (!empty($key)) {
         if (!empty($difference['additions'][$key])) {
-          return '<pre>' . implode("\n", 
-            features_override_features_export_render_addition($difference['additions'][$key], $element_name, $component_name)) . 
+          return '<pre>' . check_plain(implode("\n", 
+            features_override_features_export_render_addition($difference['additions'][$key], $element_name, $component_name))) . 
             '</pre>';
         }
         elseif (!empty($difference['deletions'][$key])) {
-          return '<pre>' . implode("\n", 
-            features_override_features_export_render_deletion($difference['deletions'][$key], $element_name, $component_name)) . 
+          return '<pre>' . check_plain(implode("\n", 
+            features_override_features_export_render_deletion($difference['deletions'][$key], $element_name, $component_name))) . 
             '</pre>';
         }
         else {
@@ -48,16 +48,16 @@ function features_override_render_differences($component = '', $element = '') {
         if (!empty($difference['additions'])) {
           foreach ($difference['additions'] as $alter) {
             if (is_scalar($alter['value'])) {
-              $code_change[] = array('<pre>' . implode("\n", features_override_features_export_render_addition($alter, $element_name, $component_name)). '</pre>');
+              $code_change[] = array('<pre>' . check_plain(implode("\n", features_override_features_export_render_addition($alter, $element_name, $component_name))). '</pre>');
             }
             else {
-              $code_add[] = array('<pre>' . implode("\n", features_override_features_export_render_addition($alter, $element_name, $component_name)). '</pre>');
+              $code_add[] = array('<pre>' . check_plain(implode("\n", features_override_features_export_render_addition($alter, $element_name, $component_name))). '</pre>');
             }
           }
         }
         if (!empty($difference['deletions'])) {
           foreach ($difference['deletions'] as $alter) {
-            $code_delete[] = array('<pre>' . implode("\n", features_override_features_export_render_deletion($alter, $element_name, $component_name)). '</pre>');
+            $code_delete[] = array('<pre>' . check_plain(implode("\n", features_override_features_export_render_deletion($alter, $element_name, $component_name))). '</pre>');
           }
         }
       }
