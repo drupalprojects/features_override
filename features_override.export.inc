@@ -182,7 +182,7 @@ function features_override_module_component_overrides($module, $component, $rese
         'deletions' => array(),
       );
       if (isset($default_copy[$name])) {
-        drupal_alter('features_override_component_overrides', $default[$name], $normal_copy[$name], $context);
+        drupal_alter('features_override_component_overrides', $default_copy[$name], $normal_copy[$name], $context);
         _features_override_set_additions($default_copy[$name], $normal_copy[$name], $component_overrides[$name]['additions'], $ignore_keys);
         _features_override_set_deletions($default_copy[$name], $normal_copy[$name], $component_overrides[$name]['deletions'], $ignore_keys);
       }
@@ -190,8 +190,16 @@ function features_override_module_component_overrides($module, $component, $rese
         $component_overrides[$name] = FALSE;
       }
     }
+    // now check for any elements that are in $default but not in $normal that we didn't process yet
+    foreach ($default as $name => $properties) {
+      if (!isset($normal_copy[$name])) {
+        $_keys = array(array('type' => 'array', 'key' => $name));
+        $component_overrides[$name]['deletions'][features_override_make_key($name)] = array(
+          'keys' => $name,
+        );
+      }
+    }
   }
-
   $cache[$module][$component] = $component_overrides;
   return $component_overrides;
 }
@@ -237,7 +245,6 @@ function _features_override_sanitize(&$array) {
  */
 function _features_override_set_additions(&$default, &$normal, &$additions, $ignore_keys = array(), $level = 0, $keys = array()) {
   $object = is_object($normal);
-
   foreach ($normal as $key => $value) {
     if (isset($ignore_keys[$key]) && ($level == $ignore_keys[$key])) {
       continue;
@@ -497,7 +504,7 @@ function features_override_var_export($var, $prefix = '') {
 /**
  * Renders the addition/change to an element.
  */
-function features_override_features_export_render_addition($alter, $element, $component) {
+function features_override_features_export_render_addition($alter, $element, $component, $is_change = TRUE) {
   module_load_include('inc', 'features_override', 'features_override.hooks');
   if (features_hook($component, 'features_override_export_render_addition')) {
     return features_invoke($component, 'features_override_export_render_addition', $alter, $element);
@@ -507,7 +514,12 @@ function features_override_features_export_render_addition($alter, $element, $co
     $component_start = "\$data['$element']";
     $code_line = features_override_export_keys($alter['keys']);
     $value_export = features_override_var_export($alter['value'], '    ');
-    $original_export = (isset($alter['original'])) ? ' // WAS: ' . features_override_var_export($alter['original'], '    ') : '';
+    if ($is_change) {
+      $original_export = (isset($alter['original'])) ? ' // WAS: ' . features_override_var_export($alter['original'], '    ') : '';
+    }
+    else {
+      $original_export = '';
+    }
     $code[] = "    " . $component_start . $code_line . ' = ' . $value_export . ';' . $original_export;
     return $code;
   }

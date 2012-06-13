@@ -38,10 +38,9 @@ function image_features_override_export_render_addition($alter, $element) {
  */
 function image_features_override_export_render_deletion($alter, $element) {
   $code = array();
-  if (isset($alter['keys']) && isset($alter['value'])) {
+  if (isset($alter['keys'])) {
     $component_start = "\$data['$element']";
     $code_line = features_override_export_keys($alter['keys']);
-    $value_export = features_override_var_export($alter['value'], '    ');
     $code[] = "";
     $code[] = "  if (" . $component_start . "['storage'] == IMAGE_STORAGE_DEFAULT) {";
     $code[] =  '    unset(' . $component_start . $code_line . ');';

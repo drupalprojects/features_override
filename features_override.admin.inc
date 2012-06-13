@@ -8,11 +8,22 @@
 /**
  * Renders the differences for a component and element
  */
-function features_override_render_differences($component = '', $element = '') {
+function features_override_render_differences($component = '', $element = '', $module = '') {
   module_load_include('inc', 'features_override', 'features_override.export');
   module_load_include('inc', 'features', 'features.export');
   drupal_add_css(drupal_get_path('module', 'features_override') . '/features_override.css');
-  $differences = features_override_get_overrides($component, $element, TRUE, !empty($component));
+  if (empty($module)) {
+    $differences = features_override_get_overrides($component, $element, TRUE, !empty($component));
+  }
+  else {
+    // only grab the differences for the specific module we are interested in
+    $differences = array();
+    foreach ($module->info['features'] as $comp_name => $comp) {
+      if ($difference = array_filter(features_override_module_component_overrides($module->name, $comp_name, FALSE, TRUE))) {
+        $differences[$comp_name] = isset($differences[$comp_name]) ? array_merge($difference, $differences[$comp_name]) : $difference;
+      }
+    }
+  }
   if (!$differences || !count(array_filter($differences))) {
     return t('No overrides were found.');    
   }
@@ -51,7 +62,7 @@ function features_override_render_differences($component = '', $element = '') {
               $code_change[] = array('<pre>' . check_plain(implode("\n", features_override_features_export_render_addition($alter, $element_name, $component_name))). '</pre>');
             }
             else {
-              $code_add[] = array('<pre>' . check_plain(implode("\n", features_override_features_export_render_addition($alter, $element_name, $component_name))). '</pre>');
+              $code_add[] = array('<pre>' . check_plain(implode("\n", features_override_features_export_render_addition($alter, $element_name, $component_name, FALSE))). '</pre>');
             }
           }
         }
@@ -104,7 +115,7 @@ function features_override_feature_diff($feature, $component = NULL) {
       );
   }
   $output['overrides'] = array(
-    '#markup' => features_override_render_differences(),
+    '#markup' => features_override_render_differences('', '', $feature),
     '#weight' => -99,
     );
   return $output;

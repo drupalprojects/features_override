@@ -101,6 +101,9 @@ function features_override_features_override_ignore($component) {
       $ignores['effect callback'] = 2;
       $ignores['dimensions callback'] = 2;
       break;
+    case 'field':
+      $ignores['locked'] = 1;
+      break;
   }
   return $ignores;
 }
