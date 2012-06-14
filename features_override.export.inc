@@ -515,7 +515,7 @@ function features_override_features_export_render_addition($alter, $element, $co
     $code_line = features_override_export_keys($alter['keys']);
     $value_export = features_override_var_export($alter['value'], '    ');
     if ($is_change) {
-      $original_export = (isset($alter['original'])) ? ' // WAS: ' . features_override_var_export($alter['original'], '    ') : '';
+      $original_export = (isset($alter['original'])) ? ' /* WAS: ' . features_override_var_export($alter['original'], '    ') . ' */' : '';
     }
     else {
       $original_export = '';
