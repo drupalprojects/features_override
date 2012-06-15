@@ -39,11 +39,16 @@ function features_override_parse_identifier($identifier) {
  *   A string representation of the keys.
  */
 function features_override_make_key($keys) {
-  $return_keys = array();
-  foreach ($keys as $key) {
-    $return_keys[] = $key['key'];
-  }
+  if (is_array($keys)) {
+    $return_keys = array();
+    foreach ($keys as $key) {
+      $return_keys[] = $key['key'];
+    }
   return implode('|', $return_keys);
+  }
+  else {
+    return $keys;
+  }
 }
 
 /**
