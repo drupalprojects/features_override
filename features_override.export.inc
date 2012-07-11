@@ -165,8 +165,8 @@ function features_override_module_component_overrides($module, $component, $rese
   _features_override_sanitize($normal);
   _features_override_sanitize($default);
   // make a deep copy of data to prevent problems when removing recursion later
-  $default_copy = unserialize(serialize($default)); 
-  $normal_copy = unserialize(serialize($normal)); 
+  $default_copy = unserialize(serialize($default));
+  $normal_copy = unserialize(serialize($normal));
 
   $ignore_keys = features_get_ignore_keys($component);
   // remove keys to be ignored
@@ -343,12 +343,14 @@ function _features_override_set_deletions(&$default, &$normal, &$deletions, $ign
  */
 function features_override_export_keys($keys) {
   $line = '';
-  foreach ($keys as $key) {
-    if ($key['type'] == 'object') {
-      $line .= "->{$key['key']}";
-    }
-    else {
-      $line .= "['{$key['key']}']";
+  if (is_array($keys)) {
+    foreach ($keys as $key) {
+      if ($key['type'] == 'object') {
+        $line .= "->{$key['key']}";
+      }
+      else {
+        $line .= "['{$key['key']}']";
+      }
     }
   }
   return $line;
@@ -362,7 +364,7 @@ function features_override_export_keys($keys) {
  */
 function features_override_remove_recursion(&$item) {
   _features_override_remove_recursion($item);
-  _features_override_remove_recursion_markers($item);  
+  _features_override_remove_recursion_markers($item);
 }
 
 
@@ -427,9 +429,9 @@ function _features_override_remove_recursion_markers(&$item) {
  * @param $item
  *   An object or array passed by reference.
  * @param $ignore_keys
- *   Array of keys to be ignored. Values are the level of the key. 
+ *   Array of keys to be ignored. Values are the level of the key.
  * @param $level
- *   Level of key to remove.  Up to 2 levels deep because $item can still be 
+ *   Level of key to remove.  Up to 2 levels deep because $item can still be
  *   recursive
  */
 function _features_override_remove_ignores(&$item, $ignore_keys, $level = -1) {
@@ -549,7 +551,7 @@ function features_override_features_export_render_deletion($alter, $element, $co
 
 /**
  * Encodes a string for use as option.
- 
+
  * @see features_dom_encode_options()
  * @param $string
  *   A string to encode.
