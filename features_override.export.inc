@@ -146,7 +146,7 @@ function features_override_module_component_overrides($module, $component, $rese
   $normal = features_get_normal($component, $module, $reset);
 
   // This indicates it is likely not controlled by features, so fetch manually.
-  if (!$normal) {
+  if (!$normal && is_array($default)) {
     $code = array_pop(features_invoke($component, 'features_export_render', $module, array_keys($default), NULL));
     if (!$code) {
       return FALSE;
