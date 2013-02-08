@@ -83,7 +83,8 @@ function features_override_get_overrides($component_key = FALSE, $element_key = 
     module_load_include('inc', 'features', 'features.export');
     features_include();
     foreach (features_get_components() as $component => $info) {
-      if (empty($info['default_hook']) || $component == 'features_override_items' || $component == 'features_overrides' || !features_get_default_alter_hook($component) | !features_hook($component, 'features_export_render')) {
+      if (empty($info['default_hook']) || $component == 'features_override_items' || $component == 'features_overrides' 
+        || !features_get_default_alter_hook($component) || !features_hook($component, 'features_export_render')) {
         continue;
       }
 
