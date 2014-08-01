@@ -449,6 +449,9 @@ function _features_override_remove_recursion(&$object, &$stack = array(), $uniqi
  */
 function _features_override_remove_ignores(&$item, $ignore_keys, $level = -1) {
   $is_object = is_object($item);
+  if (!is_array($item) && !is_object($item)) {
+    return;
+  }
   foreach ($item as $key => $value) {
     if (isset($ignore_keys[$key]) && ($ignore_keys[$key] == $level)) {
       if ($is_object) {
