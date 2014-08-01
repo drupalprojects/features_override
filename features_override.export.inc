@@ -379,8 +379,9 @@ function features_override_export_keys($keys) {
   $line = '';
   if (is_array($keys)) {
     foreach ($keys as $key) {
+      $key_value = $key['key'];
       if ($key['type'] == 'object') {
-        $line .= "->{$key['key']}";
+        $line .= is_numeric($key_value) ? '->{' . $key_value . '}' : '->' . $key_value;
       }
       else {
         $line .= "['{$key['key']}']";
@@ -537,11 +538,12 @@ function features_override_features_export_render_addition($alter, $element, $co
     $component_start = "\$data['$element']";
     $code_line = features_override_export_keys($alter['keys']);
     $value_export = features_override_var_export($alter['value'], '    ');
-    if ($is_change) {
-      $original_export = (isset($alter['original'])) ? ' /* WAS: ' . features_override_var_export($alter['original'], '    ') . ' */' : '';
-    }
-    else {
-      $original_export = '';
+    $original_export = '';
+    if ($is_change && isset($alter['original'])) {
+      $original_export = features_override_var_export($alter['original'], '    ');
+      $original_export = str_replace('/*', '\/*', $original_export);
+      $original_export = str_replace('*/', '*\/', $original_export);
+      $original_export = ' /* WAS: ' . $original_export . ' */';
     }
     $code[] = "    " . $component_start . $code_line . ' = ' . $value_export . ';' . $original_export;
     return $code;
