@@ -380,8 +380,11 @@ function features_override_export_keys($keys) {
   if (is_array($keys)) {
     foreach ($keys as $key) {
       $key_value = $key['key'];
-      if ($key['type'] == 'object') {
-        $line .= is_numeric($key_value) ? '->{' . $key_value . '}' : '->' . $key_value;
+      if (is_numeric($key_value)) {
+        $line .= '[' . $key_value . ']';
+      }
+      elseif ($key['type'] == 'object') {
+        $line .= '->' . $key_value;
       }
       else {
         $line .= "['{$key['key']}']";
