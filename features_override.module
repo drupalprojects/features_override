@@ -63,7 +63,7 @@ function features_override_menu_alter(&$items) {
     'description' => 'Compare default and current feature.',
     'page callback' => 'features_override_feature_diff',
     'page arguments' => array(3, 5),
-    'load arguments' => array(3, TRUE),
+    'load arguments' => array(TRUE),
     'access callback' => 'features_access_override_actions',
     'access arguments' => array(3),
     'type' => MENU_LOCAL_TASK,
